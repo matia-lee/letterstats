@@ -17,7 +17,7 @@ def grab_diary_movie_genres(diary_df):
             soup = BeautifulSoup(response.text, "lxml")
             genre_main_container = soup.find("div", {"id": "tab-genres"})
             if genre_main_container:
-                genre_container = soup.find("div", class_="text-sluglist capitalize")
+                genre_container = genre_main_container.find("div", class_="text-sluglist")
                 if genre_container:
                     genres = [a.text for a in genre_container.find_all("a", class_="text-slug")]
                     diary_df.at[index, 'genres'] = ", ".join(genres)
