@@ -1,7 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
+import pandas as pd
 
-def grab_dates_from_diaries(username, diary_entries):
+def grab_dates_from_diaries(username, diary_df):
+    entries = []
     current_month = "n/a"
     current_year = "n/a"
 
@@ -23,21 +25,21 @@ def grab_dates_from_diaries(username, diary_entries):
 
             date_info = movie_entry.find("td", class_="td-calendar")
             if date_info:
-                second_step = date_info.find("div", class_="date")
-                if second_step:
-                    month = date_info.find("a")
-                    year = date_info.find("small")
-                    if month and year:
-                        current_month = month.text
-                        current_year = year.text
+                month = date_info.find("a")
+                year = date_info.find("small")
+                if month and year:
+                    current_month = month.text
+                    current_year = year.text
 
             day_info = movie_entry.find("td", class_="td-day")
             if day_info:
                 day = day_info.find("a").text
 
-            entry_watched_date = f"{day}/{current_month}/{current_year}"
-            movie_info["watched_date"] = entry_watched_date
+            movie_info["watched_date"] = f"{day} {current_month} {current_year}"
 
-            diary_entries.append(movie_info)
-    
-    return diary_entries
+            if "title" in movie_info and "watched_date" in movie_info:
+                entries.append(movie_info)
+
+    diary_df = pd.DataFrame(entries)
+
+    return diary_df
