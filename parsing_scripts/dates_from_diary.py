@@ -1,8 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
+from shared_diary_data import diary_entry_information
 
 def grab_dates_from_diaries(username):
-    diary_entries_and_dates = []
     current_month = "n/a"
     current_year = "n/a"
 
@@ -40,6 +40,6 @@ def grab_dates_from_diaries(username):
 
             movie_info["watched_date"] = entry_watched_date
 
-            diary_entries_and_dates.append(movie_info)
+            diary_entry_information.append(movie_info)
     
-    return diary_entries_and_dates
+    return diary_entry_information

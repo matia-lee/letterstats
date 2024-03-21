@@ -1,6 +1,7 @@
 import streamlit as st
 from parsing_scripts.alltime_watched_films import grab_user_watched_films
 from parsing_scripts.dates_from_diary import grab_dates_from_diaries
+from parsing_scripts.diary_movie_genres import grab_diary_movie_genres
 
 def fetch_and_display_films(username):
     if username:
@@ -14,6 +15,7 @@ def fetch_and_display_films(username):
         # else:
         #     st.write(f"Hmm, we can't seem to find the movies that {username} watched.")
         if diary_entries:
+            grab_diary_movie_genres()
             message_placeholder.empty()
             st.write(f"{username} has logged these films on the following dates:")
             for entry in diary_entries:
