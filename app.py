@@ -2,53 +2,64 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 
-def fetch_user_films(username):
+def grab_user_watched_films(username):
+
+    last_page = 1
+    film_titles = []
+
     url = f"https://letterboxd.com/{username}/films/"
     response = requests.get(url)
     if response.status_code == 200:
-        return response.text 
-    return None
+        soup = BeautifulSoup(response.text, 'lxml')
+        finding_last_page = soup.find_all('li', class_='paginate-page')
+        if finding_last_page:
+            last_page_li = finding_last_page[-1]
+            last_page = int(last_page_li.find('a').text.strip())
 
-def grab_user_watched_films(html_content):
-    try:
-        soup = BeautifulSoup(html_content, 'lxml')
-        film_titles = []
-        parent_films = soup.find_all('li', class_='poster-container')
-        
-        for film_element in parent_films:
-            img = film_element.find('img')
-            if img and img.has_attr('alt'):
-                film_titles.append(img['alt'])
-        
-        if not film_titles:
-            print("No film titles found. Check selectors.")
-            return []
-        return film_titles
-    except Exception as e:
-        print(f"An error occurred while parsing HTML: {e}")
+        for page_number in range(1, last_page + 1):
+            if page_number > 1:
+                url = f"https://letterboxd.com/{username}/films/page/{page_number}/"
+                response = requests.get(url)
+                if response.status_code != 200:
+                    print(f"Uh oh sphagetti oh's failed to fetch this page's: {page_number} information")
+                    break
+                soup = BeautifulSoup(response.text, 'lxml')
+            
+            parent_films = soup.find_all('li', class_='poster-container')
+            for film_element in parent_films:
+                img = film_element.find('img')
+                if img and img.has_attr('alt'):
+                    film_titles.append(img['alt'])
+    else:
+        print("Failed to fetch first page information")
         return []
+    
+    if not film_titles:
+        print("Recheck html selectors")
+        return []
+    
+    return film_titles
 
+def fetch_and_display_films(username):
+    if username:
+        film_titles = grab_user_watched_films(username)
+        if film_titles:
+            message_placeholder.empty() 
+            st.write(f"{username} has watched the following films:")
+            for title in film_titles:
+                st.write("- ", title)
+        else:
+            st.write(f"Hmm, we can't seem to find the movies that {username} watched.")
+    else:
+        st.write("Please enter a username.")
 
 st.title('Advanced Letterboxd Stats')
-
-username = st.text_input('Enter Letterboxd username, please:', '')
-
 message_placeholder = st.empty()
 
-if st.button('Fetch Films'):
-    if username:
-        message_placeholder.text(f"Fetching films watched by {username}...")
-        html_content = fetch_user_films(username)
-        if html_content:
-            film_titles = grab_user_watched_films(html_content)
-            if film_titles:
-                message_placeholder.empty() 
-                st.write(f"{username} has watched the following films:")
-                for title in film_titles:
-                    st.write("- ", title)
-            else:
-                message_placeholder.text(f"Hmm, we can't seem to find the movies that {username} watched.")
-        else:
-            message_placeholder.text("Failed to fetch data. Please check the username or try again later.")
-    else:
-        message_placeholder.text("Please enter a username.")
+username = st.text_input('Enter Letterboxd username, please:').strip()
+
+if username:
+    st.session_state['username_input'] = username
+
+if st.button('Fetch Films') or 'username_input' in st.session_state:
+    fetch_and_display_films(st.session_state.get('username_input'))
