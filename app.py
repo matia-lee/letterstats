@@ -1,5 +1,4 @@
 import streamlit as st
-from parsing_scripts.alltime_watched_films import grab_user_watched_films
 from parsing_scripts.dates_from_diary import grab_dates_from_diaries
 from parsing_scripts.diary_movie_genres import grab_diary_movie_genres
 
