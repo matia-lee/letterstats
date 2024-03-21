@@ -4,23 +4,26 @@ from parsing_scripts.dates_from_diary import grab_dates_from_diaries
 from parsing_scripts.diary_movie_genres import grab_diary_movie_genres
 
 def fetch_and_display_films(username):
+
+    if username != st.session_state.get('last_username', ''):
+        for key in ['diary_entries', 'last_username']:
+            if key in st.session_state:
+                del st.session_state[key]
+
     if username:
-        # film_titles = grab_user_watched_films(username)
-        diary_entries = grab_dates_from_diaries(username)
-        # if film_titles:
-        #     message_placeholder.empty() 
-        #     st.write(f"{username} has watched the following films:")
-        #     for title in film_titles:
-        #         st.write("- ", title)
-        # else:
-        #     st.write(f"Hmm, we can't seem to find the movies that {username} watched.")
-        if diary_entries:
-            grab_diary_movie_genres()
+        if 'diary_entries' not in st.session_state:
+            st.session_state.diary_entries = []
+
+        st.session_state['last_username'] = username
+        
+        st.session_state.diary_entries = grab_dates_from_diaries(username, st.session_state.diary_entries)
+        st.session_state.diary_entries = grab_diary_movie_genres(st.session_state.diary_entries)
+        
+        if st.session_state.diary_entries:
             message_placeholder.empty()
             st.write(f"{username} has logged these films on the following dates:")
-            for entry in diary_entries:
+            for entry in st.session_state.diary_entries:
                 st.write(entry)
-                # st.write(f"- {entry["title"]} on {entry["watched_date"]}")
         else:
             st.write("Can't seem to find any entries...")
     else:
@@ -29,10 +32,7 @@ def fetch_and_display_films(username):
 st.title('Advanced Letterboxd Stats')
 message_placeholder = st.empty()
 
-username = st.text_input('Enter Letterboxd username, please:').strip()
+username = st.text_input('Enter Letterboxd username, please:', key="username_input").strip()
 
-if username:
-    st.session_state['username_input'] = username
-
-if st.button('Fetch Films') or 'username_input' in st.session_state:
-    fetch_and_display_films(st.session_state.get('username_input'))
+if st.button('Fetch Films') or username:
+    fetch_and_display_films(username)

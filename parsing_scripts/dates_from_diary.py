@@ -1,8 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
-from shared_diary_data import diary_entry_information
 
-def grab_dates_from_diaries(username):
+def grab_dates_from_diaries(username, diary_entries):
     current_month = "n/a"
     current_year = "n/a"
 
@@ -11,9 +10,9 @@ def grab_dates_from_diaries(username):
 
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, "lxml")
-        diary_entries = soup.find_all("tr", class_="diary-entry-row")
+        diary_entries_raw = soup.find_all("tr", class_="diary-entry-row")
 
-        for movie_entry in diary_entries:
+        for movie_entry in diary_entries_raw:
             movie_info = {}
 
             title_container = movie_entry.find("td", class_="td-film-details")
@@ -37,9 +36,8 @@ def grab_dates_from_diaries(username):
                 day = day_info.find("a").text
 
             entry_watched_date = f"{day}/{current_month}/{current_year}"
-
             movie_info["watched_date"] = entry_watched_date
 
-            diary_entry_information.append(movie_info)
+            diary_entries.append(movie_info)
     
-    return diary_entry_information
+    return diary_entries
