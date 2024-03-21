@@ -1,1 +1,4 @@
 /venv
+
+__pycache__/
+parsing_scripts/__pycache__/
