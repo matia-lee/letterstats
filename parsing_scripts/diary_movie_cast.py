@@ -13,5 +13,6 @@ def grab_diary_movie_cast(diary_df):
             cast_main_container = soup.find("div", class_="cast-list text-sluglist")
             if cast_main_container:
                 cast = [a.text for a in cast_main_container.find_all("a", class_="text-slug")]
-                diary_df.at[index, 'cast'] = ", ".join(cast)
+                diary_df.at[index, "cast"] = ", ".join(cast)
+
     return diary_df

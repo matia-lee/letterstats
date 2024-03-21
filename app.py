@@ -4,9 +4,10 @@ from parsing_scripts.dates_from_diary import grab_dates_from_diaries
 from parsing_scripts.diary_movie_genres import grab_diary_movie_genres
 from parsing_scripts.diary_movie_directors import grab_diary_movie_director
 from parsing_scripts.diary_movie_cast import grab_diary_movie_cast
+from parsing_scripts.diary_movie_rating import grab_diary_movie_rating
 
 if 'diary_df' not in st.session_state:
-    st.session_state.diary_df = pd.DataFrame(columns=['title', 'watched_date', 'genres', 'director', 'cast'])
+    st.session_state.diary_df = pd.DataFrame(columns=['title', 'watched_date', 'genres', 'director', 'cast', 'rating'])
 
 def fetch_and_display_films(username):
     if username and username != st.session_state.get('last_username', ''):
@@ -18,6 +19,7 @@ def fetch_and_display_films(username):
         st.session_state.diary_df = grab_diary_movie_genres(st.session_state.diary_df)
         st.session_state.diary_df = grab_diary_movie_director(st.session_state.diary_df)
         st.session_state.diary_df = grab_diary_movie_cast(st.session_state.diary_df)
+        st.session_state.diary_df = grab_diary_movie_rating(username, st.session_state.diary_df)
         
         if not st.session_state.diary_df.empty:
             st.write(f"{username} has logged these films on the following dates:")
