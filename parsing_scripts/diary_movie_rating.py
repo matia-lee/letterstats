@@ -1,8 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
 import re
-from parsing_scripts.diary_movie_genres import format_title_to_url_slug
-
 
 def grab_diary_movie_rating(username, diary_df):
     rating_conversion = {
