@@ -4,7 +4,7 @@ from parsing_scripts.diary_movie_genres import format_title_to_url_slug
 
 def grab_diary_movie_cast(diary_df):
     for index, row in diary_df.iterrows():
-        title_slug = format_title_to_url_slug(row["title"])
+        title_slug = format_title_to_url_slug(row["title_slug"])
         url = f"https://letterboxd.com/film/{title_slug}/"
         response = requests.get(url)
 
