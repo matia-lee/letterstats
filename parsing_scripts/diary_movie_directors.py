@@ -15,5 +15,7 @@ def grab_diary_movie_director(diary_df):
                 genre_container = genre_main_container.find("div", class_="text-sluglist")
                 if genre_container:
                     director = genre_container.find("a", class_="text-slug")
-                    diary_df.at[index, "director"] = ", ".join(director)
+                    if director:
+                        diary_df.at[index, "director"] = director.text
+                
     return diary_df
