@@ -22,7 +22,7 @@ def fetch_and_display_films(username):
         st.session_state.diary_df = grab_diary_movie_genres(st.session_state.diary_df)
         st.session_state.diary_df = grab_diary_movie_director(st.session_state.diary_df)
         st.session_state.diary_df = grab_diary_movie_cast(st.session_state.diary_df)
-        # st.session_state.diary_df = grab_diary_movie_rating(username, st.session_state.diary_df)
+        st.session_state.diary_df = grab_diary_movie_rating(username, st.session_state.diary_df)
         # st.session_state.diary_df = update_liked_movies_in_diary_df(username, st.session_state.diary_df)
         
         if not st.session_state.diary_df.empty:
