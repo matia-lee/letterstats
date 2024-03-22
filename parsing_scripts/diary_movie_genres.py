@@ -9,7 +9,7 @@ def format_title_to_url_slug(title):
 
 def grab_diary_movie_genres(diary_df):
     for index, row in diary_df.iterrows():
-        title_slug = format_title_to_url_slug(row["title"])
+        title_slug = format_title_to_url_slug(row["title_slug"])
         url = f"https://letterboxd.com/film/{title_slug}/genres/"
         response = requests.get(url)
 
