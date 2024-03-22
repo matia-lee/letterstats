@@ -19,8 +19,7 @@ def grab_diary_movie_rating(username, diary_df):
     }
 
     for index, row in diary_df.iterrows():
-        title_slug = format_title_to_url_slug(row["title_slug"])
-        url = f"https://letterboxd.com/{username}/film/{title_slug}/"
+        url = row["url"]
         response = requests.get(url)
 
         if response.status_code == 200:

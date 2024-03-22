@@ -1,11 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
-from parsing_scripts.diary_movie_genres import format_title_to_url_slug
 
 def grab_diary_movie_director(diary_df):
     for index, row in diary_df.iterrows():
-        title_slug = format_title_to_url_slug(row["title_slug"])
-        url = f"https://letterboxd.com/film/{title_slug}/crew/"
+        url = row["url"]
         response = requests.get(url)
 
         if response.status_code == 200:
