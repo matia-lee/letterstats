@@ -8,8 +8,10 @@ def fetch_liked_movie_info(session, row, username):
     title_slug = row["title_slug"]
     genre_url = f"https://letterboxd.com/film/{title_slug}/genres/"
     movie_page_url = f"https://letterboxd.com/film/{title_slug}/"
+    rating_url = f"https://letterboxd.com/{username}/film/{title_slug}/"
     genre_response = session.get(genre_url)
     movie_page_response = session.get(movie_page_url)
+    rating_url_response = session.get(rating_url)
     release_year, genres, directors, cast, rating = None, None, None, None, ""
 
     rating_conversion = {
@@ -49,6 +51,8 @@ def fetch_liked_movie_info(session, row, username):
         if cast_main_container:
             cast = ", ".join(a.text for a in cast_main_container.find_all("a", class_="text-slug"))
 
+    if rating_url_response.status_code == 200:
+        soup = BeautifulSoup(rating_url_response.text, "lxml")
         rating_element = soup.find("span", class_="rating")
         if rating_element:
             rating_text = re.sub(r'\s+', '', rating_element.text.strip())
