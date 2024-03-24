@@ -21,11 +21,6 @@ def process_liked_movies(username, liked_df):
     modified_liked_df = grab_liked_movie_data_all_inclusive(username, modified_liked_df)
     return modified_liked_df
 
-# if 'diary_df' not in st.session_state:
-#     st.session_state.diary_df = pd.DataFrame(columns=['title', 'watched_date', 'release_year', 'title_slug', 'url', 'genres', 'director', 'cast', 'rating', 'liked'])
-
-# if 'liked_df' not in st.session_state:
-#     st.session_state.liked_df = pd.DataFrame(columns=['title', 'watched_date', 'release_year', 'title_slug', 'url', 'genres', 'director', 'cast', 'rating', 'liked'])
 
 def fetch_and_display_films(username):
     if username and username != st.session_state.get('last_username', ''):
