@@ -17,7 +17,7 @@ def format_title_to_url_slug(title):
         title = re.sub(r'[^\x00-\x7F\u00C0-\u024F\u1E00-\u1EFF]', '', title)
         title = re.sub(r'(\d+)\s*\d+/\d+', r'\1', title)
         slug = unidecode(title.lower())
-        slug = slug.replace(" ", "-").replace("/", "-")
+        slug = slug.replace(" ", "-").replace("/", "-").replace(":", "-")
         slug = re.sub(r"[^a-z0-9\-]", "", slug)
         slug = re.sub(r"-+", "-", slug)
         slug = slug.strip('-')
@@ -29,6 +29,14 @@ def fetch_details_for_row(args):
     title = format_title_to_url_slug(row['title'])
     release_year = row['release_year']
     base_url = f"https://letterboxd.com/{username}/film/{title}/"
+
+    special_movie_title = "Here We Are"
+    special_movie_year = "2020"
+
+    special_movie_url = f"https://letterboxd.com/{username}/film/here-we-are-2021/"
+
+    if row['title'].strip().lower() == special_movie_title.lower() and str(row['release_year']).strip() == special_movie_year:
+        return index, format_title_to_url_slug(special_movie_title), special_movie_url
     
     response = requests.get(base_url)
     if response.status_code == 200:

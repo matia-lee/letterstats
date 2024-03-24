@@ -2,6 +2,7 @@ import pandas as pd
 import streamlit as st
 import multiprocessing
 from concurrent.futures import ThreadPoolExecutor
+from parsing_scripts.valid_username_check import valid_letterboxd_username
 from parsing_scripts.dates_from_diary import grab_date_info
 from parsing_scripts.grab_title_details import grab_title_details
 from parsing_scripts.diary_movie_info import grab_diary_movie_data_all_inclusive
@@ -10,37 +11,40 @@ from parsing_scripts.update_liked_df import update_liked_movies_with_slugs
 from parsing_scripts.liked_movie_info import grab_liked_movie_data_all_inclusive
 
 
+if 'diary_df' not in st.session_state:
+    st.session_state['diary_df'] = pd.DataFrame()
+if 'liked_df' not in st.session_state:
+    st.session_state['liked_df'] = pd.DataFrame()
+
 def process_diary_movies(username, diary_df):
-    modified_diary_df = grab_date_info(username, diary_df)
-    modified_diary_df = grab_title_details(username, modified_diary_df)
-    modified_diary_df = grab_diary_movie_data_all_inclusive(modified_diary_df)
-    return modified_diary_df
+    diary_df = grab_date_info(username, diary_df)
+    diary_df = grab_title_details(username, diary_df)
+    diary_df = grab_diary_movie_data_all_inclusive(diary_df)
+    return diary_df
 
 def process_liked_movies(username, liked_df):
-    modified_liked_df = update_liked_movies_with_slugs(username, liked_df)
-    modified_liked_df = grab_liked_movie_data_all_inclusive(username, modified_liked_df)
-    return modified_liked_df
+    liked_df = update_liked_movies_with_slugs(username, liked_df)
+    liked_df = grab_liked_movie_data_all_inclusive(username, liked_df)
+    return liked_df
 
 
 def fetch_and_display_films(username):
+    valid_letterboxd_username(username)
     if username and username != st.session_state.get('last_username', ''):
         st.session_state['last_username'] = username
-
-        # st.session_state.liked_df = pd.DataFrame(columns=['title', 'watched_date', 'release_year', 'title_slug', 'url', 'genres', 'director', 'cast', 'rating', 'liked'])
-
-        diary_df = pd.DataFrame(columns=['title', 'watched_date', 'release_year', 'title_slug', 'url', 'genres', 'director', 'cast', 'rating', 'liked'])
-        liked_df = pd.DataFrame(columns=['title', 'watched_date', 'release_year', 'title_slug', 'url', 'genres', 'director', 'cast', 'rating', 'liked'])
+        st.session_state['diary_df'] = pd.DataFrame()
+        st.session_state['liked_df'] = pd.DataFrame()
 
         workers = multiprocessing.cpu_count() * 5
         with ThreadPoolExecutor(max_workers=workers) as executor:
-            future_diary = executor.submit(process_diary_movies, username, diary_df)
-            future_liked = executor.submit(process_liked_movies, username, liked_df)
+            future_diary = executor.submit(process_diary_movies, username, st.session_state['diary_df'])
+            future_liked = executor.submit(process_liked_movies, username, st.session_state['liked_df'])
 
-            diary_df = future_diary.result()
-            liked_df = future_liked.result()
+            st.session_state['diary_df'] = future_diary.result()
+            st.session_state['liked_df'] = future_liked.result()
 
-        st.session_state.diary_df = diary_df
-        st.session_state.liked_df = liked_df
+        # st.session_state.diary_df = diary_df
+        # st.session_state.liked_df = liked_df
 
         # st.session_state.diary_df = grab_date_info(username, st.session_state.diary_df)
         # st.session_state.diary_df = grab_title_details(username, st.session_state.diary_df)
