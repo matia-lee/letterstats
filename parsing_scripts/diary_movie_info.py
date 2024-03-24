@@ -83,41 +83,14 @@ def grab_diary_movie_data_all_inclusive(diary_df):
         
         for future in as_completed(futures):
             index, genres, directors, cast, countries, studios, primary_language, spoken_languages, rating = future.result()
-            if genres:
-                diary_df.at[index, "genres"] = genres
-            else:
-                diary_df.at[index, "genres"] = ""
-                
-            if directors:
-                diary_df.at[index, "director"] = directors
-            else:
-                diary_df.at[index, "director"] = ""
-                
-            if cast:
-                diary_df.at[index, "cast"] = cast
-            else:
-                diary_df.at[index, "cast"] = ""
-
-            if countries:
-                diary_df.at[index, "countries"] = countries
-            else:
-                diary_df.at[index, "countries"] = ""
-
-            if studios:
-                diary_df.at[index, "studios"] = studios
-            else:
-                diary_df.at[index, "studios"] = ""
-
-            if primary_language:
-                diary_df.at[index, "primary_language"] = primary_language
-            else:
-                diary_df.at[index, "primary_language"] = ""
-
-            if spoken_languages:
-                diary_df.at[index, "spoken_languages"] = spoken_languages
-            else:
-                diary_df.at[index, "spoken_languages"] = ""
-
+            diary_df.at[index, "genres"] = genres if genres else ""
+            diary_df.at[index, "director"] = directors if directors else ""
+            diary_df.at[index, "cast"] = cast if cast else ""
+            diary_df.at[index, "countries"] = countries if countries else ""
+            diary_df.at[index, "studios"] = studios if studios else ""
+            diary_df.at[index, "primary_language"] = primary_language if primary_language else ""
+            diary_df.at[index, "spoken_languages"] = spoken_languages if spoken_languages else ""
+            diary_df.at[index, "rating"] = rating if rating else ""
             diary_df.at[index, "rating"] = rating
 
     return diary_df
