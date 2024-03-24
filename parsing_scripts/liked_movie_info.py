@@ -101,7 +101,15 @@
 import re
 from bs4 import BeautifulSoup
 import pandas as pd
+import pycountry
 import asyncio
+
+def get_iso_alpha_3(country_name):
+    try:
+        country = pycountry.countries.lookup(country_name)
+        return country.alpha_3
+    except LookupError:
+        return None
 
 async def fetch_url(session, url):
     async with session.get(url) as response:
@@ -152,7 +160,14 @@ async def grab_liked_movie_info_async(username, liked_df, session):
 
                 country_containers = soup.find_all("a", class_="text-slug", href=lambda value: value and value.startswith("/films/country/"))
                 if country_containers:
-                    liked_df.at[index, "countries"] = ", ".join(country.text for country in country_containers)
+                    # liked_df.at[index, "countries"] = ", ".join(country.text for country in country_containers)
+                    countries_iso = []
+                    for country in country_containers:
+                        country_name = country.text
+                        iso_alpha_3 = get_iso_alpha_3(country_name)
+                        if iso_alpha_3: 
+                            countries_iso.append(iso_alpha_3)
+                    liked_df.at[index, "countries"] = ", ".join(countries_iso)
 
                 studios_container = soup.find_all("a", href=lambda value: value and value.startswith("/studio/"))
                 if studios_container:
@@ -165,6 +180,14 @@ async def grab_liked_movie_info_async(username, liked_df, session):
                         primary_language = language_containers[0].text
                         spoken_languages = [language.text for language in language_containers if language.text != primary_language]
                         liked_df.at[index, "spoken_languages"] = ", ".join(spoken_languages) if spoken_languages else pd.NA
+
+                runtime_container = soup.find("p", class_="text-footer")
+                if runtime_container:
+                    runtime_text = runtime_container.get_text()
+                    match = re.search(r'\d+', runtime_text)
+                    if match:
+                        runtime_minutes = int(match.group())
+                        liked_df.at[index, "runtime"] = runtime_minutes
 
             elif task_type == "rating":
                 rating_conversion = {

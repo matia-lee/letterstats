@@ -99,6 +99,14 @@ import re
 from bs4 import BeautifulSoup
 import asyncio
 import pandas as pd
+import pycountry
+
+def get_iso_alpha_3(country_name):
+    try:
+        country = pycountry.countries.lookup(country_name)
+        return country.alpha_3
+    except LookupError:
+        return None
 
 async def fetch_url(session, url):
     async with session.get(url) as response:
@@ -148,7 +156,14 @@ async def grab_diary_movie_info_async(diary_df, session):
 
                 country_containers = soup.find_all("a", class_="text-slug", href=lambda value: value and value.startswith("/films/country/"))
                 if country_containers:
-                    diary_df.at[index, "countries"] = ", ".join(country.text for country in country_containers)
+                    # diary_df.at[index, "countries"] = ", ".join(country.text for country in country_containers)
+                    countries_iso = []
+                    for country in country_containers:
+                        country_name = country.text
+                        iso_alpha_3 = get_iso_alpha_3(country_name)
+                        if iso_alpha_3: 
+                            countries_iso.append(iso_alpha_3)
+                    diary_df.at[index, "countries"] = ", ".join(countries_iso)
 
                 studios_container = soup.find_all("a", href=lambda value: value and value.startswith("/studio/"))
                 if studios_container:
@@ -163,6 +178,14 @@ async def grab_diary_movie_info_async(diary_df, session):
                         diary_df.at[index, "spoken_languages"] = ", ".join(spoken_languages)
                     else:
                         diary_df.at[index, "spoken_languages"] = pd.NA
+
+                runtime_container = soup.find("p", class_="text-footer")
+                if runtime_container:
+                    runtime_text = runtime_container.get_text()
+                    match = re.search(r'\d+', runtime_text)
+                    if match:
+                        runtime_minutes = int(match.group())
+                        diary_df.at[index, "runtime"] = runtime_minutes
 
             elif task_type == "rating":
                 rating_conversion = {

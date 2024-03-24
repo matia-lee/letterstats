@@ -72,22 +72,18 @@ def fetch_details_for_row(args):
     title = format_title_to_url_slug(row['title'])
     release_year = row['release_year']
 
-    # URLs to be checked in the new order
     url_with_year = f"https://letterboxd.com/{username}/film/{title}-{release_year}/"
     base_url = f"https://letterboxd.com/{username}/film/{title}/"
 
-    # Check URL with year first
     response_with_year = requests.get(url_with_year)
     if response_with_year.status_code == 200:
         final_slug, final_url = f"{title}-{release_year}", url_with_year
     else:
-        # Check base URL next
         response = requests.get(base_url)
         if response.status_code == 200:
             final_slug, final_url = title, base_url
         else:
-            # Proceed with index iteration URLs
-            final_slug, final_url = "peepee", "poopoo"  # Placeholder for not found, adjust as needed
+            final_slug, final_url = "peepee", "poopoo"
             for i in range(1, 10):
                 url_with_suffix = f"{base_url}{i}/"
                 response_with_suffix = requests.get(url_with_suffix)

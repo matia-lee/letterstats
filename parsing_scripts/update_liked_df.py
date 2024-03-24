@@ -69,6 +69,7 @@ def process_liked_page(username, page_number):
                     "studios": pd.NA,
                     "primary_language": pd.NA,
                     "spoken_languages": pd.NA,
+                    "runtime": pd.NA,
                     "rating": pd.NA,
                     "liked": True
                 }
@@ -107,6 +108,7 @@ def fetch_pages_in_batch(username, start_page, end_page):
                         "studios": pd.NA,
                         "primary_language": pd.NA,
                         "spoken_languages": pd.NA,
+                        "runtime": pd.NA,
                         "rating": pd.NA,
                         "liked": True
                     }
