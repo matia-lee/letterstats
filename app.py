@@ -54,12 +54,6 @@ def fetch_and_display_films(username):
 
         if not final_df.empty:
             st.write(final_df.to_html(escape=False), unsafe_allow_html=True)
-            duplicate_titles_df = final_df[final_df.duplicated('title', keep=False)] 
-            if not duplicate_titles_df.empty:
-                print("Duplicate Titles Found:")
-                print(duplicate_titles_df[['title']])
-            else:
-                print("No duplicate titles found.")
         else:
             st.write("Can't seem to find any entries...")
     else:
