@@ -1,5 +1,7 @@
 import pandas as pd
 import streamlit as st
+import multiprocessing
+from concurrent.futures import ThreadPoolExecutor
 from parsing_scripts.dates_from_diary import grab_date_info
 from parsing_scripts.grab_title_details import grab_title_details
 from parsing_scripts.diary_movie_info import grab_diary_movie_data_all_inclusive
@@ -7,80 +9,74 @@ from parsing_scripts.diary_movie_info import grab_diary_movie_data_all_inclusive
 from parsing_scripts.update_liked_df import update_liked_movies_with_slugs
 from parsing_scripts.liked_movie_info import grab_liked_movie_data_all_inclusive
 
-# from concurrent.futures import ThreadPoolExecutor
 
-# def process_diary_movies(username, diary_df):
-#     diary_df = grab_dates_from_diaries(username, diary_df)
-#     diary_df = grab_diary_movie_release_year(username, diary_df)
-#     diary_df = grab_title_slug(username, diary_df)
-#     diary_df = grab_correct_url(username, diary_df)
-#     diary_df = grab_diary_movie_genres(diary_df)
-#     diary_df = grab_diary_movie_director(diary_df)
-#     diary_df = grab_diary_movie_cast(diary_df)
-#     diary_df = grab_diary_movie_rating(diary_df)
-#     return diary_df
+def process_diary_movies(username, diary_df):
+    modified_diary_df = grab_date_info(username, diary_df)
+    modified_diary_df = grab_title_details(username, modified_diary_df)
+    modified_diary_df = grab_diary_movie_data_all_inclusive(modified_diary_df)
+    return modified_diary_df
 
-# def process_liked_movies(username, liked_df):
-#     liked_df = update_liked_movies_with_slugs(username, liked_df)
-#     liked_df = grab_liked_movie_release_year(liked_df)
-#     liked_df = grab_liked_movie_genres(liked_df)
-#     liked_df = grab_liked_movie_director(liked_df)
-#     liked_df = grab_liked_movie_cast(liked_df)
-#     liked_df = grab_liked_movie_rating(username, liked_df)
-#     return liked_df
+def process_liked_movies(username, liked_df):
+    modified_liked_df = update_liked_movies_with_slugs(username, liked_df)
+    modified_liked_df = grab_liked_movie_data_all_inclusive(username, modified_liked_df)
+    return modified_liked_df
 
-if 'diary_df' not in st.session_state:
-    st.session_state.diary_df = pd.DataFrame(columns=['title', 'watched_date', 'release_year', 'title_slug', 'url', 'genres', 'director', 'cast', 'rating', 'liked'])
+# if 'diary_df' not in st.session_state:
+#     st.session_state.diary_df = pd.DataFrame(columns=['title', 'watched_date', 'release_year', 'title_slug', 'url', 'genres', 'director', 'cast', 'rating', 'liked'])
 
-if 'liked_df' not in st.session_state:
-    st.session_state.liked_df = pd.DataFrame(columns=['title', 'watched_date', 'release_year', 'title_slug', 'url', 'genres', 'director', 'cast', 'rating', 'liked'])
+# if 'liked_df' not in st.session_state:
+#     st.session_state.liked_df = pd.DataFrame(columns=['title', 'watched_date', 'release_year', 'title_slug', 'url', 'genres', 'director', 'cast', 'rating', 'liked'])
 
 def fetch_and_display_films(username):
     if username and username != st.session_state.get('last_username', ''):
         st.session_state['last_username'] = username
 
-        st.session_state.liked_df = pd.DataFrame(columns=['title', 'watched_date', 'release_year', 'title_slug', 'url', 'genres', 'director', 'cast', 'rating', 'liked'])
+        # st.session_state.liked_df = pd.DataFrame(columns=['title', 'watched_date', 'release_year', 'title_slug', 'url', 'genres', 'director', 'cast', 'rating', 'liked'])
 
-        # diary_df = pd.DataFrame(columns=['title', 'watched_date', 'release_year', 'title_slug', 'url', 'genres', 'director', 'cast', 'rating', 'liked'])
-        # liked_df = pd.DataFrame(columns=['title', 'watched_date', 'release_year', 'title_slug', 'url', 'genres', 'director', 'cast', 'rating', 'liked'])
+        diary_df = pd.DataFrame(columns=['title', 'watched_date', 'release_year', 'title_slug', 'url', 'genres', 'director', 'cast', 'rating', 'liked'])
+        liked_df = pd.DataFrame(columns=['title', 'watched_date', 'release_year', 'title_slug', 'url', 'genres', 'director', 'cast', 'rating', 'liked'])
 
-        # with ThreadPoolExecutor(max_workers=10) as executor:
-        #     future_diary = executor.submit(process_diary_movies, username, diary_df)
-        #     future_liked = executor.submit(process_liked_movies, username, liked_df)
+        workers = multiprocessing.cpu_count() * 5
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            future_diary = executor.submit(process_diary_movies, username, diary_df)
+            future_liked = executor.submit(process_liked_movies, username, liked_df)
 
-        #     st.session_state.diary_df = future_diary.result()
-        #     st.session_state.liked_df = future_liked.result()
+            diary_df = future_diary.result()
+            liked_df = future_liked.result()
+
+        st.session_state.diary_df = diary_df
+        st.session_state.liked_df = liked_df
 
         # st.session_state.diary_df = grab_date_info(username, st.session_state.diary_df)
         # st.session_state.diary_df = grab_title_details(username, st.session_state.diary_df)
         # st.session_state.diary_df = grab_diary_movie_data_all_inclusive(st.session_state.diary_df)
 
-        st.session_state.liked_df = update_liked_movies_with_slugs(username, st.session_state.liked_df)
-        st.session_state.liked_df = grab_liked_movie_data_all_inclusive(username, st.session_state.liked_df)
+        # st.session_state.liked_df = update_liked_movies_with_slugs(username, st.session_state.liked_df)
+        # st.session_state.liked_df = grab_liked_movie_data_all_inclusive(username, st.session_state.liked_df)
 
-        # liked_titles_set = set(st.session_state.liked_df['title'])
-        # st.session_state.diary_df['liked'] = st.session_state.diary_df['title'].apply(lambda title: title in liked_titles_set)
+        liked_titles_set = set(st.session_state.liked_df['title'])
+        st.session_state.diary_df['liked'] = st.session_state.diary_df['title'].apply(lambda title: title in liked_titles_set)
 
-        # final_df = pd.merge(st.session_state.diary_df, st.session_state.liked_df, on=['title', 'watched_date', 'release_year', 'title_slug', 'url', 'genres', 'director', 'cast', 'rating'], how='outer', suffixes=('', '_liked'))
-        # final_df['liked'] = final_df.apply(lambda row: True if pd.notna(row['liked_liked']) else row['liked'], axis=1)
-        # final_df.drop(columns=['liked_liked'], inplace=True)
-        # final_df.drop_duplicates(subset=['title', 'release_year', 'title_slug', 'genres', 'director', 'cast', 'liked'], inplace=True)
-        # final_df.reset_index(drop=True, inplace=True)
+        final_df = pd.merge(st.session_state.diary_df, st.session_state.liked_df, on=['title', 'watched_date', 'release_year', 'title_slug', 'url', 'genres', 'director', 'cast', 'rating'], how='outer', suffixes=('', '_liked'))
+        final_df['liked'] = final_df.apply(lambda row: True if pd.notna(row['liked_liked']) else row['liked'], axis=1)
+        final_df.drop(columns=['liked_liked'], inplace=True)
+        final_df.drop_duplicates(subset=['title', 'release_year', 'title_slug', 'genres', 'director', 'cast', 'liked'], inplace=True)
+        final_df.reset_index(drop=True, inplace=True)
 
         # if not st.session_state.diary_df.empty:
         #     st.write(f"{username} has logged these films on the following dates:")
         #     st.write(st.session_state.diary_df.to_html(escape=False), unsafe_allow_html=True)
         # else:
         #     st.write("Can't seem to find any entries...")
-        if not st.session_state.liked_df.empty:
-            st.write(f"{username} has liked these films:")
-            st.write(st.session_state.liked_df.to_html(escape=False), unsafe_allow_html=True)
-        else:
-            st.write("Can't seem to find any entries...")
-        # if not final_df.empty:
-        #     st.write(final_df.to_html(escape=False), unsafe_allow_html=True)
+        # if not st.session_state.liked_df.empty:
+        #     st.write(f"{username} has liked these films:")
+        #     st.write(st.session_state.liked_df.to_html(escape=False), unsafe_allow_html=True)
         # else:
         #     st.write("Can't seem to find any entries...")
+        if not final_df.empty:
+            st.write(final_df.to_html(escape=False), unsafe_allow_html=True)
+        else:
+            st.write("Can't seem to find any entries...")
     else:
         st.write("Please enter a username.")
 

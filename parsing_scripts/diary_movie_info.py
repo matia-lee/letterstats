@@ -61,7 +61,7 @@ def grab_diary_movie_data_all_inclusive(diary_df):
 
     workers = multiprocessing.cpu_count() * 5
     with ThreadPoolExecutor(max_workers=workers) as executor:
-        futures = [executor.submit(fetch_movie_data_for_row, session, row, r) for index, row in diary_df.iterrows()]
+        futures = [executor.submit(fetch_movie_data_for_row, session, row, rating_conversion) for index, row in diary_df.iterrows()]
         
         for future in as_completed(futures):
             index, genres, directors, cast, rating = future.result()
