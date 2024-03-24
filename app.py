@@ -41,6 +41,10 @@ def fetch_and_display_films(username):
     valid_letterboxd_username(username)
     if username and username != st.session_state.get('last_username', ''):
         st.session_state['last_username'] = username
+
+        loading_message = st.empty()
+        loading_message.info("This may take a couple mins depending on how many movies you've watched...")
+
         diary_df = st.session_state['diary_df']
         liked_df = st.session_state['liked_df']
 
@@ -51,6 +55,8 @@ def fetch_and_display_films(username):
         final_df = run_asyncio_tasks(username, diary_df, liked_df)
 
         st.session_state['final_df'] = final_df
+
+        loading_message.empty()
 
         if not final_df.empty:
             st.write(final_df.to_html(escape=False), unsafe_allow_html=True)
