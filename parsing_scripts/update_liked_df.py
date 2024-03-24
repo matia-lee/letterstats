@@ -65,6 +65,10 @@ def process_liked_page(username, page_number):
                     "genres": pd.NA,
                     "director": pd.NA,
                     "cast": pd.NA,
+                    "countries": pd.NA,
+                    "studios": pd.NA,
+                    "primary_language": pd.NA,
+                    "spoken_languages": pd.NA,
                     "rating": pd.NA,
                     "liked": True
                 }
@@ -99,6 +103,10 @@ def fetch_pages_in_batch(username, start_page, end_page):
                         "genres": pd.NA,
                         "director": pd.NA,
                         "cast": pd.NA,
+                        "countries": pd.NA,
+                        "studios": pd.NA,
+                        "primary_language": pd.NA,
+                        "spoken_languages": pd.NA,
                         "rating": pd.NA,
                         "liked": True
                     }
