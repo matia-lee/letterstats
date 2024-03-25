@@ -8,4 +8,5 @@ def valid_letterboxd_username(username):
     if response.status_code == 200:
         return username
     else:
-        st.write("Hmmmm, are you sure the username is correct?")
+        st.error("Hmmmm couldn't find anything, are you sure the username is correct?")
+        return False

@@ -189,16 +189,16 @@ async def grab_diary_movie_info_async(diary_df, session):
 
             elif task_type == "rating":
                 rating_conversion = {
-                    "½": "1",
-                    "★": "2",
-                    "★½": "3",
-                    "★★": "4",
-                    "★★½": "5",
-                    "★★★": "6",
-                    "★★★½": "7",
-                    "★★★★": "8",
-                    "★★★★½": "9",
-                    "★★★★★": "10"
+                    "½": 1,
+                    "★": 2,
+                    "★½": 3,
+                    "★★": 4,
+                    "★★½": 5,
+                    "★★★": 6,
+                    "★★★½": 7,
+                    "★★★★": 8,
+                    "★★★★½": 9,
+                    "★★★★★": 10
                 }
                 rating_element = soup.find("span", class_="rating")
                 if rating_element:

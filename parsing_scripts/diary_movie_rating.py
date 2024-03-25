@@ -49,16 +49,16 @@ def fetch_movie_rating_for_row(url, rating_conversion):
 
 def grab_diary_movie_rating(diary_df):
     rating_conversion = {
-        "½": "1",
-        "★": "2",
-        "★½": "3",
-        "★★": "4",
-        "★★½": "5",
-        "★★★": "6",
-        "★★★½": "7",
-        "★★★★": "8",
-        "★★★★½": "9",
-        "★★★★★": "10"
+        "½": 1,
+        "★": 2,
+        "★½": 3,
+        "★★": 4,
+        "★★½": 5,
+        "★★★": 6,
+        "★★★½": 7,
+        "★★★★": 8,
+        "★★★★½": 9,
+        "★★★★★": 10
     }
 
     with ThreadPoolExecutor(max_workers=200) as executor:

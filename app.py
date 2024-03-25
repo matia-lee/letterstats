@@ -11,6 +11,26 @@ from parsing_scripts.diary_movie_info import grab_diary_movie_info_async
 from parsing_scripts.liked_movie_info import grab_liked_movie_info_async
 from parsing_scripts.update_liked_df import update_liked_movies_with_slugs
 
+from visualize_scripts.genre_stats import calculate_total_watched_time
+from visualize_scripts.genre_stats import genre_stats
+
+st.set_page_config(page_title="LetterStats", page_icon="🍿")
+
+# st.markdown("""
+# <style>
+# button {
+#     top: 20px;
+#     right: 10px;
+# }
+# </style>
+# """, unsafe_allow_html=True)
+
+if 'refresh_trigger' not in st.session_state:
+    st.session_state['refresh_trigger'] = 0
+
+if st.button("↻", key="refresh_button", help="Refresh Cache (warning: this will cause it to gather the data again)", on_click=lambda: st.session_state.__setitem__('refresh_trigger', st.session_state['refresh_trigger'] + 1)):
+    st.rerun()
+
 if 'diary_df' not in st.session_state:
     st.session_state['diary_df'] = pd.DataFrame()
 if 'liked_df' not in st.session_state:
@@ -36,30 +56,50 @@ def run_asyncio_tasks(username, diary_df, liked_df):
         final_df.drop_duplicates(subset=['title', 'release_year', 'genres', 'director', 'cast', 'countries', 'studios', 'primary_language', 'spoken_languages', 'runtime', 'liked'], inplace=True)
         final_df.reset_index(drop=True, inplace=True)
         return final_df
+    
+@st.cache_data
+def construct_final_df(username, diary_df, liked_df, refresh_trigger):
+    diary_df = grab_date_info(username, diary_df)
+    diary_df = grab_title_details(username, diary_df)
+    liked_df = update_liked_movies_with_slugs(username, liked_df)
+
+    final_df = run_asyncio_tasks(username, diary_df, liked_df)
+    return final_df
 
 def fetch_and_display_films(username):
-    valid_letterboxd_username(username)
+    is_valid = valid_letterboxd_username(username)
+    if not is_valid:
+        return
+    
+    if 'final_df' not in st.session_state:
+        st.session_state['final_df'] = pd.DataFrame()
+
     if username and username != st.session_state.get('last_username', ''):
         st.session_state['last_username'] = username
 
         loading_message = st.empty()
         loading_message.info("This may take a couple mins depending on how many movies you've watched...")
 
-        diary_df = st.session_state['diary_df']
-        liked_df = st.session_state['liked_df']
+        # diary_df = st.session_state['diary_df']
+        # liked_df = st.session_state['liked_df']
 
-        diary_df = grab_date_info(username, diary_df)
-        diary_df = grab_title_details(username, diary_df)
-        liked_df = update_liked_movies_with_slugs(username, liked_df)
+        final_df = construct_final_df(username, st.session_state['diary_df'], st.session_state['liked_df'], st.session_state['refresh_trigger'])
 
-        final_df = run_asyncio_tasks(username, diary_df, liked_df)
+        # diary_df = grab_date_info(username, diary_df)
+        # diary_df = grab_title_details(username, diary_df)
+        # liked_df = update_liked_movies_with_slugs(username, liked_df)
+
+        # final_df = run_asyncio_tasks(username, diary_df, liked_df)
 
         st.session_state['final_df'] = final_df
 
         loading_message.empty()
 
         if not final_df.empty:
-            st.write(final_df.to_html(escape=False), unsafe_allow_html=True)
+            # st.write(final_df.to_html(escape=False), unsafe_allow_html=True)
+            st.write(f"<h1><i>{username}</i>'s LetterStats 🍿</h1>", unsafe_allow_html=True)
+            calculate_total_watched_time(st.session_state['final_df'])
+            genre_stats(st.session_state['final_df'])
         else:
             st.write("Can't seem to find any entries...")
     else:
