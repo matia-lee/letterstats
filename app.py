@@ -109,7 +109,7 @@ def fetch_and_display_films(username):
         loading_message.empty()
 
         if not final_df.empty:
-            st.write(final_df.to_html(escape=False), unsafe_allow_html=True)
+            # st.write(final_df.to_html(escape=False), unsafe_allow_html=True)
             st.write(f"<h1><i>{username}</i>'s LetterStats 🍿</h1>", unsafe_allow_html=True)
             calculate_total_watched_time(st.session_state['final_df'])
             genre_stats(st.session_state['final_df'])
