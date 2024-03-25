@@ -64,7 +64,7 @@ def create_genre_over_time_graph(most_watched_genre_per_month):
 def genre_stats_over_months(final_df):
     final_df["watched_date"] = pd.to_datetime(final_df["watched_date"], errors="coerce", dayfirst=True)
 
-    last_12_months = datetime.now() - timedelta(days=365)
+    last_12_months = datetime.now() - timedelta(days=395)
     filtered_df = final_df[final_df["watched_date"] >= last_12_months]
 
     all_genres = filtered_df.assign(genres=filtered_df["genres"].str.split(", ")).explode("genres")
@@ -76,8 +76,16 @@ def genre_stats_over_months(final_df):
     most_watched_counts_per_month = genre_pivot.max(axis=1).reset_index(name="Count")
     most_watched_genre_per_month["Count"] = most_watched_counts_per_month["Count"]
 
-    most_watched_genre_per_month = most_watched_genre_per_month.sort_values(by="year_month", ascending=False)
     most_watched_genre_per_month["year_month"] = most_watched_genre_per_month["year_month"].astype(str)
+
+    first_month = filtered_df["watched_date"].min().to_period('M')
+    first_month_genres = all_genres[all_genres["year_month"] == first_month]
+    recalculated_counts = first_month_genres.groupby("genres").size()
+    most_watched_genre_first_month = recalculated_counts.idxmax()
+    most_watched_count_first_month = recalculated_counts.max()
+
+    if most_watched_genre_per_month.loc[0, "Most Watched Genre"] == most_watched_genre_first_month and most_watched_genre_per_month.loc[0, "Count"] != most_watched_count_first_month:
+        most_watched_genre_per_month.loc[0, "Count"] = most_watched_count_first_month
 
     return most_watched_genre_per_month
 

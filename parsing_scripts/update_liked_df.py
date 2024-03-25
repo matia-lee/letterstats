@@ -3,41 +3,6 @@ from bs4 import BeautifulSoup
 import multiprocessing
 import pandas as pd
 
-# def update_liked_movies_with_slugs(username, liked_df):
-#     url = f"https://letterboxd.com/{username}/likes/films/"
-#     response = requests.get(url)
-#     new_rows = []
-
-#     if response.status_code == 200:
-#         soup = BeautifulSoup(response.text, "lxml")
-#         film_posters = soup.find_all("div", class_="film-poster")
-        
-#         for poster in film_posters:
-#             film_slug = poster.get("data-film-slug", None)
-#             img = poster.find("img")
-            
-#             if film_slug and img and img.has_attr("alt"):
-#                 title = img["alt"].strip()
-#                 if not ((liked_df['title'] == title) & (liked_df['title_slug'] == film_slug)).any():
-#                     new_row = {
-#                         "title": title,
-#                         "watched_date": pd.NA,
-#                         "release_year": pd.NA,
-#                         "title_slug": film_slug,
-#                         "url": pd.NA,
-#                         "genres": pd.NA,
-#                         "director": pd.NA,
-#                         "cast": pd.NA,
-#                         "rating": pd.NA,
-#                         "liked": True
-#                     }
-#                     new_rows.append(new_row)
-
-#     if new_rows:
-#         liked_df = pd.concat([liked_df, pd.DataFrame(new_rows)], ignore_index=True)
-    
-#     return liked_df
-
 def process_liked_page(username, page_number):
     new_rows = []
     if page_number == 1:

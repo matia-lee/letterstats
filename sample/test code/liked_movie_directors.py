@@ -2,24 +2,6 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 
-# def grab_liked_movie_director(liked_df):
-#     for index, row in liked_df.iterrows():
-#         title_slug = row["title_slug"]
-#         url = f"https://letterboxd.com/film/{title_slug}/genres/"
-#         response = requests.get(url)
-
-#         if response.status_code == 200:
-#             soup = BeautifulSoup(response.text, "lxml")
-#             genre_main_container = soup.find("div", {"id": "tab-crew"})
-#             if genre_main_container:
-#                 genre_container = genre_main_container.find("div", class_="text-sluglist")
-#                 if genre_container:
-#                     directors = genre_container.find_all("a", class_="text-slug")
-#                     if directors:
-#                         liked_df.at[index, "director"] = ", ".join(director.text for director in directors)
-                
-#     return liked_df
-
 def fetch_directors(title_slug):
     url = f"https://letterboxd.com/film/{title_slug}/"
     response = requests.get(url)

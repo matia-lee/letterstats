@@ -28,13 +28,16 @@ st.set_page_config(page_title="LetterStats", page_icon="🍿")
 if 'refresh_trigger' not in st.session_state:
     st.session_state['refresh_trigger'] = 0
 
-if st.button("↻", key="refresh_button", help="Refresh Cache (warning: this will cause it to gather the data again)", on_click=lambda: st.session_state.__setitem__('refresh_trigger', st.session_state['refresh_trigger'] + 1)):
+if st.button("↻", key="refresh_button", help="Refresh Cache (warning: this will cause it to gather the data again)"):
+    st.session_state['refresh_trigger'] += 1
     st.rerun()
 
 if 'diary_df' not in st.session_state:
     st.session_state['diary_df'] = pd.DataFrame()
 if 'liked_df' not in st.session_state:
     st.session_state['liked_df'] = pd.DataFrame()
+
+pd.set_option('future.no_silent_downcasting', True)
 
 def run_asyncio_tasks(username, diary_df, liked_df):
     async def async_wrapper():
@@ -52,8 +55,18 @@ def run_asyncio_tasks(username, diary_df, liked_df):
         final_df = pd.merge(updated_diary_df, updated_liked_df, on=['title', 'watched_date', 'release_year', 'title_slug', 'url', 'genres', 'director', 'cast', 'countries', 'studios', 'primary_language', 'spoken_languages', 'runtime', 'rating'], how='outer', suffixes=('', '_liked'))
         final_df['liked'] = final_df.apply(lambda row: True if pd.notna(row.get('liked_liked')) else row['liked'], axis=1)
         final_df.drop(columns=['liked_liked'], inplace=True)
-        final_df.drop_duplicates(subset=['title', 'release_year', 'title_slug', 'genres', 'director', 'cast', 'countries', 'studios', 'primary_language', 'spoken_languages', 'runtime', 'liked'], inplace=True)
-        final_df.drop_duplicates(subset=['title', 'release_year', 'genres', 'director', 'cast', 'countries', 'studios', 'primary_language', 'spoken_languages', 'runtime', 'liked'], inplace=True)
+        # final_df.drop_duplicates(subset=['title', 'release_year', 'title_slug', 'genres', 'director', 'cast', 'countries', 'studios', 'primary_language', 'spoken_languages', 'runtime', 'liked'], inplace=True)
+
+
+        # final_df.drop_duplicates(subset=['title', 'release_year', 'genres', 'director', 'cast', 'countries', 'studios', 'primary_language', 'spoken_languages', 'runtime', 'liked'], inplace=True)
+        duplicate_marker = final_df.duplicated(subset=[
+            "title", "release_year", "genres", "director", "cast",
+            "countries", "studios", "primary_language", "spoken_languages",
+            "runtime", "liked"
+        ], keep=False) 
+        final_df.drop_duplicates(subset=['title', 'watched_date', 'release_year', 'title_slug', 'url', 'genres', 'director', 'cast', 'countries', 'studios', 'primary_language', 'spoken_languages', 'runtime', 'rating', 'liked'], inplace=True)
+        duplicate_marker = duplicate_marker & final_df['watched_date'].isna()
+        final_df = final_df[~duplicate_marker]
         final_df.reset_index(drop=True, inplace=True)
         return final_df
     
@@ -96,7 +109,7 @@ def fetch_and_display_films(username):
         loading_message.empty()
 
         if not final_df.empty:
-            # st.write(final_df.to_html(escape=False), unsafe_allow_html=True)
+            st.write(final_df.to_html(escape=False), unsafe_allow_html=True)
             st.write(f"<h1><i>{username}</i>'s LetterStats 🍿</h1>", unsafe_allow_html=True)
             calculate_total_watched_time(st.session_state['final_df'])
             genre_stats(st.session_state['final_df'])
