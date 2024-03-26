@@ -322,7 +322,6 @@ def genre_stats(final_df):
         calculated_diversity = calculate_diversity(final_df)
         plot_diversity(calculated_diversity)
 
-
         st.markdown("""
             <style>
             .average {
