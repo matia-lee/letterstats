@@ -76,17 +76,21 @@ def create_genre_over_time_graph(most_watched_genre_per_month):
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 def genre_stats_over_months(final_df):
-    final_df["watched_date"] = pd.to_datetime(final_df["watched_date"], errors="coerce", dayfirst=True)
+    final_df["watched_date"] = pd.to_datetime(final_df["watched_date"], format='%d %b %Y')
 
     last_12_months = datetime.now() - timedelta(days=395)
     filtered_df = final_df[final_df["watched_date"] >= last_12_months]
 
     all_genres = filtered_df.assign(genres=filtered_df["genres"].str.split(", ")).explode("genres")
+    all_genres = all_genres[~all_genres['genres'].str.contains("show", case=False, na=False)]
     all_genres["year_month"] = all_genres["watched_date"].dt.to_period("M")
+
     monthly_genre_counts = all_genres.groupby(["year_month", "genres"]).size().reset_index(name="counts")
-    
+
     genre_pivot = monthly_genre_counts.pivot(index="year_month", columns="genres", values="counts").fillna(0)
+
     most_watched_genre_per_month = genre_pivot.idxmax(axis=1).reset_index(name="Most Watched Genre")
+
     most_watched_counts_per_month = genre_pivot.max(axis=1).reset_index(name="Count")
     most_watched_genre_per_month["Count"] = most_watched_counts_per_month["Count"]
 
@@ -101,6 +105,7 @@ def calculate_diversity(final_df):
     filtered_df = final_df[final_df["watched_date"] >= last_12_months]
 
     all_genres = filtered_df.assign(genres=filtered_df["genres"].str.split(", ")).explode("genres")
+    all_genres = all_genres[~all_genres['genres'].str.contains("show", case=False, na=False)]
     all_genres["year_month"] = all_genres["watched_date"].dt.to_period("M")
 
     monthly_genre_counts = all_genres.groupby(["year_month", "genres"]).size().reset_index(name="counts")
@@ -176,6 +181,7 @@ def plot_diversity(diversity_and_totals_df):
 def genre_with_rating(final_df):
     final_df['genres'] = final_df['genres'].apply(lambda x: [genre.strip().lower() for genre in x.split(',')] if isinstance(x, str) else x)
     df_exploded = final_df.explode('genres')
+    df_exploded = df_exploded[~df_exploded['genres'].str.contains("show", case=False, na=False)]
     df_exploded['rating'] = pd.to_numeric(df_exploded['rating'], errors='coerce')
     avg_rating_by_genre = df_exploded.groupby('genres')['rating'].mean().reset_index(name='mean_rating')
     avg_rating_by_genre['mean_rating'] = avg_rating_by_genre['mean_rating'].round(1)
@@ -217,9 +223,11 @@ def create_avg_rating_by_genre_graph_horizontal(avg_rating_by_genre):
 def genre_stats(final_df):
     with st.expander("Genre Stats"):
         all_genres = final_df["genres"].str.split(", ").explode()
+        all_genres = all_genres[~all_genres.str.contains("show", case=False, na=False)]
+
         genre_counts = all_genres.value_counts().reset_index()
         genre_counts.columns = ["Genre", "Count"]
-        
+
         top_10_common_genres = genre_counts.head(10).sort_values(by="Count", ascending=True)
         top_10_uncommon_genres = genre_counts.tail(10)
 
