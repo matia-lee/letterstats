@@ -99,7 +99,7 @@ def genre_stats_over_months(final_df):
     return most_watched_genre_per_month.tail(13)
 
 def calculate_diversity(final_df):
-    final_df["watched_date"] = pd.to_datetime(final_df["watched_date"], errors="coerce", dayfirst=True)
+    final_df["watched_date"] = pd.to_datetime(final_df["watched_date"], format='%d %b %Y')
 
     last_12_months = datetime.now() - timedelta(days=395)
     filtered_df = final_df[final_df["watched_date"] >= last_12_months]
@@ -118,7 +118,7 @@ def calculate_diversity(final_df):
     diversity_and_totals = pd.merge(shannon_diversity_index, monthly_totals, on="year_month")
     diversity_and_totals["year_month"] = diversity_and_totals["year_month"].astype(str)
 
-    return diversity_and_totals
+    return diversity_and_totals.tail(13)
 
 def plot_diversity(diversity_and_totals_df):
     bar_color = "#636EFA" 
@@ -130,7 +130,7 @@ def plot_diversity(diversity_and_totals_df):
         name="Total Movies",
         marker_color=bar_color,
         yaxis='y',
-        hovertemplate='<b>%{x}</b><extra></extra>',
+        hovertemplate='<b>%{y} movies</b> %{x}<extra></extra>',
     )
 
     line_chart = go.Scatter(
