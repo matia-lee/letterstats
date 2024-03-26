@@ -13,6 +13,7 @@ from parsing_scripts.update_liked_df import update_liked_movies_with_slugs
 
 from visualize_scripts.genre_stats import calculate_total_watched_time
 from visualize_scripts.genre_stats import genre_stats
+from visualize_scripts.cast_stats import cast_stats
 
 st.set_page_config(page_title="LetterStats", page_icon="🍿")
 
@@ -113,6 +114,7 @@ def fetch_and_display_films(username):
             st.write(f"<h1><i>{username}</i>'s LetterStats 🍿</h1>", unsafe_allow_html=True)
             calculate_total_watched_time(st.session_state['final_df'])
             genre_stats(st.session_state['final_df'])
+            cast_stats(st.session_state['final_df'])
         else:
             st.write("Can't seem to find any entries...")
     else:

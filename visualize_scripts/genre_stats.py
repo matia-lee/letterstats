@@ -92,7 +92,7 @@ def genre_stats_over_months(final_df):
 
     most_watched_genre_per_month["year_month"] = most_watched_genre_per_month["year_month"].astype(str)
 
-    return most_watched_genre_per_month
+    return most_watched_genre_per_month.tail(13)
 
 def calculate_diversity(final_df):
     final_df["watched_date"] = pd.to_datetime(final_df["watched_date"], errors="coerce", dayfirst=True)
@@ -125,7 +125,7 @@ def plot_diversity(diversity_and_totals_df):
         name="Total Movies",
         marker_color=bar_color,
         yaxis='y',
-        hovertemplate='<b>%{y}</b><extra></extra>',
+        hovertemplate='<b>%{x}</b><extra></extra>',
     )
 
     line_chart = go.Scatter(
