@@ -1,5 +1,4 @@
 import pandas as pd
-import matplotlib.pyplot as plt
 import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
@@ -232,7 +231,9 @@ def genre_stats(final_df):
         top_10_uncommon_genres = genre_counts.tail(10)
 
         liked_movies_df = final_df[final_df["liked"] == True]
-        high_rated_genres = liked_movies_df["genres"].str.split(", ").explode().value_counts().reset_index()
+        high_rated_genres = liked_movies_df["genres"].str.split(", ").explode()
+        high_rated_genres = high_rated_genres[~high_rated_genres.str.contains("show", case=False, na=False)]
+        high_rated_genres = high_rated_genres.value_counts().reset_index()
         high_rated_genres.columns = ["Genre", "Count"]
         top_genres_high_rated = high_rated_genres.head(10).sort_values(by="Count", ascending=True)
 
