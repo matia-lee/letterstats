@@ -7,14 +7,28 @@ from itertools import combinations
 from community import community_louvain
 import numpy as np
 
-def create_bar_graph(data, x, y, title, color="skyblue", ccs=None):
+def create_bar_graph(data, x, y, title, color="skyblue", hover_data=None, ccs=None):
+    def concise_hover_text(movies_list):
+        if len(movies_list) <= 5:
+            return "<br>".join(movies_list)
+        else:
+            more_count = len(movies_list) - 5
+            displayed_movies = movies_list[:5]
+            return "<br>".join(displayed_movies) + f"<br>and {more_count} more..."
+
+    if hover_data is not None:
+        data["hover_text"] = hover_data.apply(concise_hover_text)
+    else:
+        data["hover_text"] = ""
+
     fig = px.bar(
         data, y=y, x=x, orientation="h",
         color_discrete_sequence=[color] if ccs is None else [ccs] * len(data),
-        text=x  
+        text=x,
+        hover_data=["hover_text"]
     )
 
-    fig.update_traces(hovertemplate="%{x} <b>Films</b>", textposition="outside")
+    fig.update_traces(hovertemplate="%{customdata[0]}", textposition="outside")
 
     fig.update_layout(
         barmode="stack",
@@ -33,6 +47,25 @@ def create_bar_graph(data, x, y, title, color="skyblue", ccs=None):
     )
 
     return fig
+
+def iterative_adjust_positions(pos, min_distance=0.1, max_iterations=100):
+    pos_np = np.array(list(pos.values()))
+    n = len(pos_np)
+    for _ in range(max_iterations):
+        adjustments = np.zeros_like(pos_np)
+        for i in range(n):
+            for j in range(i + 1, n):
+                vector = pos_np[j] - pos_np[i]
+                distance = np.linalg.norm(vector)
+                if distance < min_distance:
+                    adjustment = vector * (min_distance - distance) / distance
+                    adjustments[i] -= adjustment / 2
+                    adjustments[j] += adjustment / 2
+        pos_np += adjustments
+        if np.linalg.norm(adjustments) < 1e-4: 
+            break
+    adjusted_pos = {node: pos for node, pos in zip(pos.keys(), pos_np)}
+    return adjusted_pos
 
 def build_actor_network(final_df):
     G = nx.Graph()
@@ -73,8 +106,8 @@ def visualize_network(G):
     ]
     custom_cmap = LinearSegmentedColormap.from_list("custom_expanded", colors, N=256)
     
-    pos = nx.spring_layout(G, k=1.1, iterations=90)
-    adjusted_pos = adjust_positions(pos, G, min_distance=1000) 
+    pos = nx.spring_layout(G, k=0.6, iterations=50)
+    adjusted_pos = iterative_adjust_positions(pos, min_distance=0.2, max_iterations=100)
 
     fig, ax = plt.subplots(figsize=(8, 8))
     fig.set_facecolor("#0F1116")
@@ -89,21 +122,29 @@ def visualize_network(G):
 
 def cast_stats(final_df):
     with st.expander("Cast Stats"):
-        cast_df = final_df
-        all_actors = cast_df["cast"].str.split(", ").explode()
-        all_actors = all_actors[~all_actors.str.contains("show", case=False, na=False)]
-        actor_count = all_actors.value_counts().reset_index()
-        actor_count.columns = ["Actor", "Count"]
+        cast_df = final_df.copy()
+        cast_df["cast"] = cast_df["cast"].str.split(", ")
+        cast_df = cast_df.explode("cast")
+        cast_df = cast_df[~cast_df["cast"].str.contains(r"^Jr\.$", case=False, na=False)]
+        cast_df = cast_df[~cast_df["cast"].str.contains("show", case=False, na=False)]
+        cast_movies = cast_df.groupby("cast")["title"].apply(list).reset_index(name="Movies")
 
-        top_10_common_actors = actor_count.head(10).sort_values(by="Count", ascending=True)
+        cast_count = cast_df["cast"].value_counts().reset_index()
+        cast_count.columns = ["Cast", "Count"]
+        cast_count = cast_count.merge(cast_movies, left_on="Cast", right_on="cast", how="left").drop(columns = ["cast"])
 
-        liked_movies_df = cast_df[cast_df["liked"] == True]
-        high_rated_actors = liked_movies_df["cast"].str.split(", ").explode()
-        high_rated_actors = high_rated_actors[~high_rated_actors.str.contains("show", case=False, na=False)]
-        high_rated_actors = high_rated_actors[~high_rated_actors.str.contains(r'^Jr\.$', case=False, na=False)]
-        high_rated_actors = high_rated_actors.value_counts().reset_index()
-        high_rated_actors.columns = ["Actor", "Count"]
-        top_actors_high_rated = high_rated_actors.head(10).sort_values(by="Count", ascending=True)
+        top_10_common_actors = cast_count.head(10).sort_values(by="Count", ascending=True)
+
+        liked_movies_df = cast_df[cast_df["liked"] == True].copy()
+        liked_movies_df["cast"] = liked_movies_df["cast"].str.split(", ")
+        liked_movies_df = liked_movies_df.explode("cast")
+        liked_movies_df = liked_movies_df[~liked_movies_df["cast"].str.contains("show", case=False, na=False)]
+        liked_movies_df = liked_movies_df[~liked_movies_df["cast"].str.contains(r'^Jr\.$', case=False, na=False)]
+        liked_high_rated_actors = liked_movies_df.groupby("cast")["title"].apply(list).reset_index(name="Movies")
+        high_rated_actors_counted = liked_movies_df["cast"].value_counts().reset_index()
+        high_rated_actors_counted.columns = ["Cast", "Count"]
+        high_rated_actors_counted = high_rated_actors_counted.merge(liked_high_rated_actors, left_on="Cast", right_on="cast", how="left").drop(columns=["cast"])
+        top_actors_high_rated = high_rated_actors_counted.head(10).sort_values(by="Count", ascending=True)
 
         st.markdown("""
             <style>
@@ -117,7 +158,7 @@ def cast_stats(final_df):
             </style>
             <p class="big-font">Most watched actors:</p>
             """, unsafe_allow_html=True)
-        fig1 = create_bar_graph(top_10_common_actors, x="Count", y="Actor", title="Most Watched Actors", color="rgb(102, 221, 103)")
+        fig1 = create_bar_graph(top_10_common_actors, x="Count", y="Cast", title="Most Watched Actors", color="rgb(102, 221, 103)", hover_data=top_10_common_actors["Movies"])
         st.plotly_chart(fig1, use_container_width=True, config={"displayModeBar": False})
 
         st.markdown("""
@@ -132,7 +173,7 @@ def cast_stats(final_df):
             </style>
             <p class="big-font">Top actors from your liked movies:</p>
             """, unsafe_allow_html=True)
-        fig3 = create_bar_graph(top_actors_high_rated, x="Count", y="Actor", title="Common Actors from Movies you've Liked", color="rgb(239, 135, 51)")
+        fig3 = create_bar_graph(top_actors_high_rated, x="Count", y="Cast", title="Common Actors from Movies you've Liked", color="rgb(239, 135, 51)",  hover_data=top_actors_high_rated["Movies"])
         st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar": False})
 
         st.markdown("""
@@ -159,7 +200,7 @@ def cast_stats(final_df):
             </style>
             <p class="speciall-font">(Shows actors that have acted together in your top 10 rated movies. Bigger node size = more connections)</p>
             """, unsafe_allow_html=True)
-        top_rated_df = cast_df.sort_values(by='rating', ascending=False).head(10)
+        top_rated_df = final_df.sort_values(by='rating', ascending=False).head(10)
         top_rated_df['cast'] = top_rated_df['cast'].apply(lambda x: ', '.join(x.split(', ')[:5]))
         grab_connections = build_actor_network(top_rated_df)
         visualize_network(grab_connections)

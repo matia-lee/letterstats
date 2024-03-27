@@ -14,14 +14,28 @@ def calculate_total_watched_time(final_df):
     # st.write(f"That means, you've watched over {max_index} movies")
     return total_runtime_int, max_index
 
-def create_bar_graph(data, x, y, title, color="skyblue", ccs=None):
+def create_bar_graph(data, x, y, title, color="skyblue", hover_data=None, ccs=None):
+    def concise_hover_text(movies_list):
+        if len(movies_list) <= 5:
+            return "<br>".join(movies_list)
+        else:
+            more_count = len(movies_list) - 5
+            displayed_movies = movies_list[:5]
+            return "<br>".join(displayed_movies) + f"<br>and {more_count} more..."
+
+    if hover_data is not None:
+        data["hover_text"] = hover_data.apply(concise_hover_text)
+    else:
+        data["hover_text"] = ""
+
     fig = px.bar(
         data, y=y, x=x, orientation="h",
         color_discrete_sequence=[color] if ccs is None else [ccs] * len(data),
-        text=x  
+        text=x,
+        hover_data=["hover_text"]
     )
 
-    fig.update_traces(hovertemplate="%{x} <b>Films</b>", textposition="outside")
+    fig.update_traces(hovertemplate="%{customdata[0]}", textposition="outside")
 
     fig.update_layout(
         barmode="stack",
@@ -221,22 +235,28 @@ def create_avg_rating_by_genre_graph_horizontal(avg_rating_by_genre):
 
 def genre_stats(final_df):
     with st.expander("Genre Stats"):
-        genre_df = final_df
-        all_genres = genre_df["genres"].str.split(", ").explode()
-        all_genres = all_genres[~all_genres.str.contains("show", case=False, na=False)]
+        genre_df = final_df.copy()
+        genre_df["genres"] = genre_df["genres"].str.split(", ")
+        genre_df = genre_df.explode("genres")
+        genre_df = genre_df[~genre_df["genres"].str.contains("show", case=False, na=False)]
+        genre_movies = genre_df.groupby('genres')['title'].apply(list).reset_index(name='Movies')
 
-        genre_counts = all_genres.value_counts().reset_index()
-        genre_counts.columns = ["Genre", "Count"]
+        genre_count = genre_df['genres'].value_counts().reset_index()
+        genre_count.columns = ["Genres", "Count"]
+        genre_count = genre_count.merge(genre_movies, left_on="Genres", right_on="genres", how="left").drop(columns=["genres"])
 
-        top_10_common_genres = genre_counts.head(10).sort_values(by="Count", ascending=True)
-        top_10_uncommon_genres = genre_counts.tail(10)
+        top_10_common_genres = genre_count.head(10).sort_values(by="Count", ascending=True)
+        top_10_uncommon_genres = genre_count.tail(10)
 
-        liked_movies_df = genre_df[genre_df["liked"] == True]
-        high_rated_genres = liked_movies_df["genres"].str.split(", ").explode()
-        high_rated_genres = high_rated_genres[~high_rated_genres.str.contains("show", case=False, na=False)]
-        high_rated_genres = high_rated_genres.value_counts().reset_index()
-        high_rated_genres.columns = ["Genre", "Count"]
-        top_genres_high_rated = high_rated_genres.head(10).sort_values(by="Count", ascending=True)
+        liked_movies_df = genre_df[genre_df["liked"] == True].copy()
+        liked_movies_df["genres"] = liked_movies_df["genres"].str.split(", ")
+        liked_movies_df = liked_movies_df.explode("genres")
+        liked_movies_df = liked_movies_df[~liked_movies_df["genres"].str.contains("show", case=False, na=False)]
+        liked_high_rated_genres = liked_movies_df.groupby("genres")["title"].apply(list).reset_index(name="Movies")
+        high_rated_genres_counted = liked_movies_df["genres"].value_counts().reset_index()
+        high_rated_genres_counted.columns = ["Genres", "Count"]
+        high_rated_genres_counted = high_rated_genres_counted.merge(liked_high_rated_genres, left_on="Genres", right_on="genres", how="left").drop(columns=["genres"])
+        top_genres_high_rated = high_rated_genres_counted.head(10).sort_values(by="Genres", ascending=True)
 
         st.markdown("""
             <style>
@@ -250,7 +270,7 @@ def genre_stats(final_df):
             </style>
             <p class="big-font">Most watched genres:</p>
             """, unsafe_allow_html=True)
-        fig1 = create_bar_graph(top_10_common_genres, x="Count", y="Genre", title="Most Watched Genres", color="rgb(102, 221, 103)")
+        fig1 = create_bar_graph(top_10_common_genres, x="Count", y="Genres", title="Most Watched Genres", color="rgb(102, 221, 103)", hover_data=top_10_common_genres["Movies"])
         st.plotly_chart(fig1, use_container_width=True, config={"displayModeBar": False})
 
         st.markdown("""
@@ -265,7 +285,7 @@ def genre_stats(final_df):
             </style>
             <p class="big-font">Least watched genres:</p>
             """, unsafe_allow_html=True)
-        fig2 = create_bar_graph(top_10_uncommon_genres, x="Count", y="Genre", title="Least Watched Genres", color="rgb(101, 186, 239)")
+        fig2 = create_bar_graph(top_10_uncommon_genres, x="Count", y="Genres", title="Least Watched Genres", color="rgb(101, 186, 239)", hover_data=top_10_uncommon_genres["Movies"])
         st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
 
         st.markdown("""
@@ -280,7 +300,7 @@ def genre_stats(final_df):
             </style>
             <p class="big-font">Top genres from your liked movies:</p>
             """, unsafe_allow_html=True)
-        fig3 = create_bar_graph(top_genres_high_rated, x="Count", y="Genre", title="Common Genres from Movies you've Liked", color="rgb(239, 135, 51)")
+        fig3 = create_bar_graph(top_genres_high_rated, x="Count", y="Genres", title="Common Genres from Movies you've Liked", color="rgb(239, 135, 51)", hover_data=high_rated_genres_counted["Movies"])
         st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar": False})
 
         st.markdown("""
