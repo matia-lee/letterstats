@@ -271,7 +271,7 @@ def director_stats(final_df):
                 position: absolute !important;
             }
             </style>
-            <p class="small-font">(From 20 of your least watched directors)</p>
+            <p class="small-font">(From 20 of your least watched directors) (No data means you've lef their movie unrated)</p>
             """, unsafe_allow_html=True)
         fig4 = lowest_director_with_rating(final_df)
         create_avg_rating_by_director_graph_horizontal(fig4, title="Average Rating per Least Watched Director", color="#E6A9A9")
