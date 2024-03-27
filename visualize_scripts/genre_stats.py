@@ -9,7 +9,7 @@ def calculate_total_watched_time(final_df):
     total_runtime = final_df["runtime"].sum()
     total_runtime_int = int(total_runtime)
     max_index = final_df["title"].idxmax()
-    st.write(f"<u>You've watched a total of {total_runtime_int} minutes of cinema!</u>", unsafe_allow_html=True)
+    st.markdown(f"<u>You've watched a total of <span style='color: rgb(239, 135, 51);'>{total_runtime_int}</span> minutes of cinema!</u>", unsafe_allow_html=True)
     st.write("Check out some stats below: ")
     # st.write(f"That means, you've watched over {max_index} movies")
     return total_runtime_int, max_index

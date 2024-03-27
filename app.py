@@ -15,6 +15,7 @@ from visualize_scripts.genre_stats import calculate_total_watched_time
 from visualize_scripts.genre_stats import genre_stats
 from visualize_scripts.cast_stats import cast_stats
 from visualize_scripts.director_stats import director_stats
+from visualize_scripts.studios_stats import studio_stats
 
 st.set_page_config(page_title="LetterStats", page_icon="🍿")
 
@@ -95,6 +96,7 @@ def fetch_and_display_films(username):
             genre_stats(st.session_state['final_df'])
             cast_stats(st.session_state['final_df'])
             director_stats(st.session_state['final_df'])
+            studio_stats(st.session_state['final_df'])
         else:
             st.write("Can't seem to find any entries...")
     else:
