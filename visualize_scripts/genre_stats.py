@@ -300,26 +300,26 @@ def genre_stats(final_df):
 
         st.markdown("""
             <style>
-            .big-font {
+            .slug-font {
                 font-size:25px !important;
                 font-weight: 700 !important;
                 margin-bottom: -40px !important;
                 z-index: 400 !important;
             }
             </style>
-            <p class="big-font">Genre diversity compared to the amount of movies you've watched per month from the past year:</p>
+            <p class="slug-font">Genre diversity compared to the amount of movies you've watched per month from the past year:</p>
             """, unsafe_allow_html=True)
 
         st.markdown("""
             <style>
-            .small-font {
+            .snail-font {
                 font-size:15px !important;
                 margin-top: 40px !important;
                 z-index: 410 !important;
                 position: absolute !important;
             }
             </style>
-            <p class="small-font">(The higher the Shannon Diversity Index, the more genres you've explored that month)</p>
+            <p class="snail-font">(The higher the Shannon Diversity Index, the more genres you've explored that month)</p>
             """, unsafe_allow_html=True)
         calculated_diversity = calculate_diversity(genre_df)
         plot_diversity(calculated_diversity)

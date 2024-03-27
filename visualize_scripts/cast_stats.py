@@ -137,7 +137,7 @@ def cast_stats(final_df):
 
         st.markdown("""
             <style>
-            .big-font {
+            .special-font {
                 font-size:25px !important;
                 font-weight: 700 !important;
                 margin-bottom: 20px !important;
@@ -145,19 +145,19 @@ def cast_stats(final_df):
                 z-index: 1000 !important;
             }
             </style>
-            <p class="big-font">Actor Network in Your Top Rated Movies:</p>
+            <p class="special-font">Actor Network in Your Top Rated Movies:</p>
             """, unsafe_allow_html=True)
         
         st.markdown("""
             <style>
-            .small-font {
+            .speciall-font {
                 font-size:15px !important;
                 margin-top: -10px !important;
                 z-index: 410 !important;
                 position: absolute !important;
             }
             </style>
-            <p class="small-font">(Shows actors that have acted together in your top 10 rated movies. Bigger node size = more connections)</p>
+            <p class="speciall-font">(Shows actors that have acted together in your top 10 rated movies. Bigger node size = more connections)</p>
             """, unsafe_allow_html=True)
         top_rated_df = cast_df.sort_values(by='rating', ascending=False).head(10)
         top_rated_df['cast'] = top_rated_df['cast'].apply(lambda x: ', '.join(x.split(', ')[:5]))
