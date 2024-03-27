@@ -14,17 +14,9 @@ from parsing_scripts.update_liked_df import update_liked_movies_with_slugs
 from visualize_scripts.genre_stats import calculate_total_watched_time
 from visualize_scripts.genre_stats import genre_stats
 from visualize_scripts.cast_stats import cast_stats
+from visualize_scripts.director_stats import director_stats
 
 st.set_page_config(page_title="LetterStats", page_icon="🍿")
-
-# st.markdown("""
-# <style>
-# button {
-#     top: 20px;
-#     right: 10px;
-# }
-# </style>
-# """, unsafe_allow_html=True)
 
 if 'refresh_trigger' not in st.session_state:
     st.session_state['refresh_trigger'] = 0
@@ -56,10 +48,6 @@ def run_asyncio_tasks(username, diary_df, liked_df):
         final_df = pd.merge(updated_diary_df, updated_liked_df, on=['title', 'watched_date', 'release_year', 'title_slug', 'url', 'genres', 'director', 'cast', 'countries', 'studios', 'primary_language', 'spoken_languages', 'runtime', 'rating'], how='outer', suffixes=('', '_liked'))
         final_df['liked'] = final_df.apply(lambda row: True if pd.notna(row.get('liked_liked')) else row['liked'], axis=1)
         final_df.drop(columns=['liked_liked'], inplace=True)
-        # final_df.drop_duplicates(subset=['title', 'release_year', 'title_slug', 'genres', 'director', 'cast', 'countries', 'studios', 'primary_language', 'spoken_languages', 'runtime', 'liked'], inplace=True)
-
-
-        # final_df.drop_duplicates(subset=['title', 'release_year', 'genres', 'director', 'cast', 'countries', 'studios', 'primary_language', 'spoken_languages', 'runtime', 'liked'], inplace=True)
         duplicate_marker = final_df.duplicated(subset=[
             "title", "release_year", "genres", "director", "cast",
             "countries", "studios", "primary_language", "spoken_languages",
@@ -94,16 +82,7 @@ def fetch_and_display_films(username):
         loading_message = st.empty()
         loading_message.info("This may take a couple mins depending on how many movies you've watched...")
 
-        # diary_df = st.session_state['diary_df']
-        # liked_df = st.session_state['liked_df']
-
         final_df = construct_final_df(username, st.session_state['diary_df'], st.session_state['liked_df'], st.session_state['refresh_trigger'])
-
-        # diary_df = grab_date_info(username, diary_df)
-        # diary_df = grab_title_details(username, diary_df)
-        # liked_df = update_liked_movies_with_slugs(username, liked_df)
-
-        # final_df = run_asyncio_tasks(username, diary_df, liked_df)
 
         st.session_state['final_df'] = final_df
 
@@ -115,6 +94,7 @@ def fetch_and_display_films(username):
             calculate_total_watched_time(st.session_state['final_df'])
             genre_stats(st.session_state['final_df'])
             cast_stats(st.session_state['final_df'])
+            director_stats(st.session_state['final_df'])
         else:
             st.write("Can't seem to find any entries...")
     else:
