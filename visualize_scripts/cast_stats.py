@@ -89,15 +89,15 @@ def visualize_network(G):
 
 def cast_stats(final_df):
     with st.expander("Cast Stats"):
-        # print(final_df["genres"])
-        all_actors = final_df["cast"].str.split(", ").explode()
+        cast_df = final_df
+        all_actors = cast_df["cast"].str.split(", ").explode()
         all_actors = all_actors[~all_actors.str.contains("show", case=False, na=False)]
         actor_count = all_actors.value_counts().reset_index()
         actor_count.columns = ["Actor", "Count"]
 
         top_10_common_actors = actor_count.head(10).sort_values(by="Count", ascending=True)
 
-        liked_movies_df = final_df[final_df["liked"] == True]
+        liked_movies_df = cast_df[cast_df["liked"] == True]
         high_rated_actors = liked_movies_df["cast"].str.split(", ").explode()
         high_rated_actors = high_rated_actors[~high_rated_actors.str.contains("show", case=False, na=False)]
         high_rated_actors = high_rated_actors.value_counts().reset_index()
@@ -158,7 +158,7 @@ def cast_stats(final_df):
             </style>
             <p class="small-font">(Shows actors that have acted together in your top 10 rated movies. Bigger node size = more connections)</p>
             """, unsafe_allow_html=True)
-        top_rated_df = final_df.sort_values(by='rating', ascending=False).head(10)
+        top_rated_df = cast_df.sort_values(by='rating', ascending=False).head(10)
         top_rated_df['cast'] = top_rated_df['cast'].apply(lambda x: ', '.join(x.split(', ')[:5]))
         grab_connections = build_actor_network(top_rated_df)
         visualize_network(grab_connections)
