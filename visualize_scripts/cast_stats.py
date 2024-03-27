@@ -100,6 +100,7 @@ def cast_stats(final_df):
         liked_movies_df = cast_df[cast_df["liked"] == True]
         high_rated_actors = liked_movies_df["cast"].str.split(", ").explode()
         high_rated_actors = high_rated_actors[~high_rated_actors.str.contains("show", case=False, na=False)]
+        high_rated_actors = high_rated_actors[~high_rated_actors.str.contains(r'^Jr\.$', case=False, na=False)]
         high_rated_actors = high_rated_actors.value_counts().reset_index()
         high_rated_actors.columns = ["Actor", "Count"]
         top_actors_high_rated = high_rated_actors.head(10).sort_values(by="Count", ascending=True)
