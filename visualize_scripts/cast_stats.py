@@ -47,28 +47,6 @@ def build_actor_network(final_df):
 
     return G
 
-# def visualize_network(G):
-#     plt.figure(figsize=(10, 10))
-#     pos = nx.spring_layout(G, k=1, iterations=70)  
-
-#     degree_centralities = dict(G.degree())
-#     max_degree = max(degree_centralities.values())
-
-#     threshold = max_degree * 0.25
-
-#     node_sizes = [degree_centralities[node] * 150 for node in G.nodes()]
-
-#     nx.draw_networkx_nodes(G, pos, node_size=node_sizes, node_color='skyblue', alpha=0.7)
-#     nx.draw_networkx_edges(G, pos, width=1.0, alpha=0.5, edge_color='gray')
-
-#     key_actor_labels = {node: node for node, degree in degree_centralities.items() if degree > threshold}
-    
-#     nx.draw_networkx_labels(G, pos, labels=key_actor_labels, font_size=5, font_weight='400')
-
-#     plt.axis('off')
-#     plt.show()
-#     st.pyplot(plt)
-
 def adjust_positions(pos, G, min_distance=0.1):
     pos_np = np.array(list(pos.values()))
     adjustments = np.zeros(pos_np.shape)
@@ -111,6 +89,7 @@ def visualize_network(G):
 
 def cast_stats(final_df):
     with st.expander("Cast Stats"):
+        # print(final_df["genres"])
         all_actors = final_df["cast"].str.split(", ").explode()
         all_actors = all_actors[~all_actors.str.contains("show", case=False, na=False)]
         actor_count = all_actors.value_counts().reset_index()
@@ -154,7 +133,6 @@ def cast_stats(final_df):
             """, unsafe_allow_html=True)
         fig3 = create_bar_graph(top_actors_high_rated, x="Count", y="Actor", title="Common Actors from Movies you've Liked", color="rgb(239, 135, 51)")
         st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar": False})
-
 
         st.markdown("""
             <style>

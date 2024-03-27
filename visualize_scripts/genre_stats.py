@@ -221,7 +221,8 @@ def create_avg_rating_by_genre_graph_horizontal(avg_rating_by_genre):
 
 def genre_stats(final_df):
     with st.expander("Genre Stats"):
-        all_genres = final_df["genres"].str.split(", ").explode()
+        genre_df = final_df
+        all_genres = genre_df["genres"].str.split(", ").explode()
         all_genres = all_genres[~all_genres.str.contains("show", case=False, na=False)]
 
         genre_counts = all_genres.value_counts().reset_index()
@@ -230,7 +231,7 @@ def genre_stats(final_df):
         top_10_common_genres = genre_counts.head(10).sort_values(by="Count", ascending=True)
         top_10_uncommon_genres = genre_counts.tail(10)
 
-        liked_movies_df = final_df[final_df["liked"] == True]
+        liked_movies_df = genre_df[genre_df["liked"] == True]
         high_rated_genres = liked_movies_df["genres"].str.split(", ").explode()
         high_rated_genres = high_rated_genres[~high_rated_genres.str.contains("show", case=False, na=False)]
         high_rated_genres = high_rated_genres.value_counts().reset_index()
@@ -294,7 +295,7 @@ def genre_stats(final_df):
             </style>
             <p class="big-font">The most watched genres per month from the past year:</p>
             """, unsafe_allow_html=True)
-        most_watched_genre_per_month = genre_stats_over_months(final_df)
+        most_watched_genre_per_month = genre_stats_over_months(genre_df)
         create_genre_over_time_graph(most_watched_genre_per_month)
 
         st.markdown("""
@@ -320,7 +321,7 @@ def genre_stats(final_df):
             </style>
             <p class="small-font">(The higher the Shannon Diversity Index, the more genres you've explored that month)</p>
             """, unsafe_allow_html=True)
-        calculated_diversity = calculate_diversity(final_df)
+        calculated_diversity = calculate_diversity(genre_df)
         plot_diversity(calculated_diversity)
 
         st.markdown("""
@@ -335,5 +336,5 @@ def genre_stats(final_df):
             </style>
             <p class="average">Average Rating per Genre:</p>
             """, unsafe_allow_html=True)
-        average_rating_per_genre = genre_with_rating(final_df)
+        average_rating_per_genre = genre_with_rating(genre_df)
         create_avg_rating_by_genre_graph_horizontal(average_rating_per_genre)
