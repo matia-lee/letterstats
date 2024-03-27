@@ -1,5 +1,11 @@
 import streamlit as st
 import plotly.express as px
+from matplotlib.colors import LinearSegmentedColormap
+import networkx as nx
+import matplotlib.pyplot as plt
+from itertools import combinations
+from community import community_louvain
+import numpy as np
 
 def create_bar_graph(data, x, y, title, color="skyblue", ccs=None):
     fig = px.bar(
@@ -27,6 +33,81 @@ def create_bar_graph(data, x, y, title, color="skyblue", ccs=None):
     )
 
     return fig
+
+def build_actor_network(final_df):
+    G = nx.Graph()
+
+    for index, row in final_df.iterrows():
+        actors = row['cast'].split(', ')
+        for actor_pair in combinations(actors, 2):
+            if G.has_edge(*actor_pair):
+                G[actor_pair[0]][actor_pair[1]]['weight'] += 1
+            else:
+                G.add_edge(actor_pair[0], actor_pair[1], weight=1)
+
+    return G
+
+# def visualize_network(G):
+#     plt.figure(figsize=(10, 10))
+#     pos = nx.spring_layout(G, k=1, iterations=70)  
+
+#     degree_centralities = dict(G.degree())
+#     max_degree = max(degree_centralities.values())
+
+#     threshold = max_degree * 0.25
+
+#     node_sizes = [degree_centralities[node] * 150 for node in G.nodes()]
+
+#     nx.draw_networkx_nodes(G, pos, node_size=node_sizes, node_color='skyblue', alpha=0.7)
+#     nx.draw_networkx_edges(G, pos, width=1.0, alpha=0.5, edge_color='gray')
+
+#     key_actor_labels = {node: node for node, degree in degree_centralities.items() if degree > threshold}
+    
+#     nx.draw_networkx_labels(G, pos, labels=key_actor_labels, font_size=5, font_weight='400')
+
+#     plt.axis('off')
+#     plt.show()
+#     st.pyplot(plt)
+
+def adjust_positions(pos, G, min_distance=0.1):
+    pos_np = np.array(list(pos.values()))
+    adjustments = np.zeros(pos_np.shape)
+    for i in range(len(pos_np)):
+        for j in range(len(pos_np)):
+            if i != j:
+                vector = pos_np[j] - pos_np[i]
+                distance = np.linalg.norm(vector)
+                if distance < min_distance:
+                    adjustment = vector * (min_distance - distance) / distance
+                    adjustments[i] -= adjustment / 2
+                    adjustments[j] += adjustment / 2
+    adjusted_pos = {node: pos + adjustment for (node, pos), adjustment in zip(pos.items(), adjustments)}
+    return adjusted_pos
+
+def visualize_network(G):
+    partition = community_louvain.best_partition(G)
+    community_colors = {node: partition[node] for node in G.nodes()}
+    
+    colors = [
+        '#b9d9dc', '#a8dadc', '#95d0d3', '#82c5ca', '#6fbac1',
+        '#9de2d0', '#b5e4ca', '#cce7c4', '#d7e8bc',
+        '#f1d1a9', '#f4b880', '#f79e6d', '#ffb35c', '#ffbf70', '#ffcb85'
+    ]
+    custom_cmap = LinearSegmentedColormap.from_list("custom_expanded", colors, N=256)
+    
+    pos = nx.spring_layout(G, k=1.1, iterations=90)
+    adjusted_pos = adjust_positions(pos, G, min_distance=1000) 
+
+    fig, ax = plt.subplots(figsize=(8, 8))
+    fig.set_facecolor("#0F1116")
+    ax.set_facecolor("#ffffff")
+    nx.draw_networkx_nodes(G, adjusted_pos, node_color=list(community_colors.values()), cmap=custom_cmap, alpha=0.8, node_size=[G.degree(node) * 200 for node in G.nodes()])
+    nx.draw_networkx_edges(G, adjusted_pos, alpha=0.3, edge_color="#9b9b9b")
+    nx.draw_networkx_labels(G, adjusted_pos, font_size=6, font_weight="400", font_color="#ffffff")
+    
+    plt.title("Actor Network Visualization", fontsize=16, fontweight="bold", color="#9b9b9b")
+    plt.axis('off')
+    st.pyplot(plt.gcf())
 
 def cast_stats(final_df):
     with st.expander("Cast Stats"):
@@ -73,4 +154,34 @@ def cast_stats(final_df):
             """, unsafe_allow_html=True)
         fig3 = create_bar_graph(top_actors_high_rated, x="Count", y="Actor", title="Common Actors from Movies you've Liked", color="rgb(239, 135, 51)")
         st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar": False})
+
+
+        st.markdown("""
+            <style>
+            .big-font {
+                font-size:25px !important;
+                font-weight: 700 !important;
+                margin-bottom: 20px !important;
+                position: relative !important;
+                z-index: 1000 !important;
+            }
+            </style>
+            <p class="big-font">Actor Network in Your Top Rated Movies:</p>
+            """, unsafe_allow_html=True)
+        
+        st.markdown("""
+            <style>
+            .small-font {
+                font-size:15px !important;
+                margin-top: -10px !important;
+                z-index: 410 !important;
+                position: absolute !important;
+            }
+            </style>
+            <p class="small-font">(Shows actors that have acted together in your top 10 rated movies. Bigger node size = more connections)</p>
+            """, unsafe_allow_html=True)
+        top_rated_df = final_df.sort_values(by='rating', ascending=False).head(10)
+        top_rated_df['cast'] = top_rated_df['cast'].apply(lambda x: ', '.join(x.split(', ')[:5]))
+        grab_connections = build_actor_network(top_rated_df)
+        visualize_network(grab_connections)
 

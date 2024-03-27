@@ -59,24 +59,24 @@ def fetch_details_for_row(args):
                         if response_with_double_suffix.status_code == 200:
                             final_slug, final_url = title, url_with_double_suffix
                             break
+            else:
+                return index, None, None
     
     return index, final_slug, final_url
 
 
 def grab_title_details(username, diary_df):
     workers = multiprocessing.cpu_count() * 5
+    keep_indices = []
     with ThreadPoolExecutor(max_workers=workers) as executor:
         futures = [executor.submit(fetch_details_for_row, (username, index, row)) for index, row in diary_df.iterrows()]
         
         for future in as_completed(futures):
             index, final_slug, final_url = future.result()
-            if final_slug:
+            if final_slug is not None and final_url is not None:
+                keep_indices.append(index)
                 diary_df.at[index, 'title_slug'] = final_slug
-            else:
-                diary_df.at[index, 'title_slug'] = pd.NA
-            if final_url:
                 diary_df.at[index, "url"] = final_url
-            else:
-                diary_df.at[index, "url"] = pd.NA
-
-    return diary_df
+                
+    filtered_diary_df = diary_df.loc[keep_indices]
+    return filtered_diary_df
