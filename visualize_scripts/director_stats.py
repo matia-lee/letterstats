@@ -12,6 +12,7 @@ def create_bar_graph(data, x, y, title, color="skyblue", hover_data=None, ccs=No
             return "<br>".join(displayed_movies) + f"<br>and {more_count} more..."
 
     if hover_data is not None:
+        data = data.copy()
         data["hover_text"] = hover_data.apply(concise_hover_text)
     else:
         data["hover_text"] = ""
@@ -57,18 +58,6 @@ def director_with_rating(final_df):
     
     return avg_rating_by_director
 
-def prepare_data_for_boxplot(final_df):
-    final_df["director"] = final_df["director"].apply(lambda x: [director.strip().lower() for director in x.split(",")] if isinstance(x, str) else x)
-    df_exploded = final_df.explode("director")
-    df_exploded = df_exploded[~df_exploded["director"].str.contains("show", case=False, na=False)]
-    df_exploded["rating"] = pd.to_numeric(df_exploded["rating"], errors="coerce")
-    director_counts = df_exploded["director"].value_counts().reset_index(name="count").rename(columns={"index": "director"})
-    top20_directors = director_counts.nlargest(20, "count")["director"]
-    df_filtered = df_exploded[df_exploded["director"].isin(top20_directors)]
-    df_filtered["director"] = df_filtered["director"].str.capitalize()
-    
-    return df_filtered
-
 def lowest_director_with_rating(final_df):
     final_df["director"] = final_df["director"].apply(lambda x: [director.strip().lower() for director in x.split(",")] if isinstance(x, str) else x)
     df_exploded = final_df.explode("director")
@@ -83,7 +72,7 @@ def lowest_director_with_rating(final_df):
     
     return avg_rating_by_director
 
-def create_avg_rating_by_director_graph_horizontal(avg_rating_by_director, title,  color,ccs=None):
+def create_avg_rating_by_director_graph_horizontal(avg_rating_by_director, title, color ,ccs=None):
     fig = px.bar(
         avg_rating_by_director, 
         y="director", x="mean_rating", orientation="h",
@@ -201,7 +190,7 @@ def director_stats(final_df):
 
         st.markdown("""
             <style>
-            .big-font {
+            .director-font {
                 font-size:25px !important;
                 font-weight: 700 !important;
                 margin-bottom: 20px !important;
@@ -209,14 +198,14 @@ def director_stats(final_df):
                 z-index: 1000 !important;
             }
             </style>
-            <p class="big-font">Most watched directors:</p>
+            <p class="director-font">Most watched directors:</p>
             """, unsafe_allow_html=True)
         fig1 = create_bar_graph(top_10_common_directors, x="Count", y="Director", title="Most Watched Directors", color="rgb(102, 221, 103)", hover_data=top_10_common_directors["Movies"])
         st.plotly_chart(fig1, use_container_width=True, config={"displayModeBar": False})
 
         st.markdown("""
             <style>
-            .big-font {
+            .director-font {
                 font-size:25px !important;
                 font-weight: 700 !important;
                 margin-bottom: 20px !important;
@@ -224,14 +213,14 @@ def director_stats(final_df):
                 z-index: 1000 !important;
             }
             </style>
-            <p class="big-font">Least watched directors</p>
+            <p class="director-font">Least watched directors</p>
             """, unsafe_allow_html=True)
         fig3 = create_bar_graph(bottom_10_common_directors, x="Count", y="Director", title="Least Watched Directors", color="rgb(101, 186, 239)",  hover_data=bottom_10_common_directors["Movies"])
         st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar": False})
 
         st.markdown("""
             <style>
-            .big-font {
+            .director-font {
                 font-size:25px !important;
                 font-weight: 700 !important;
                 margin-bottom: 20px !important;
@@ -239,14 +228,14 @@ def director_stats(final_df):
                 z-index: 1000 !important;
             }
             </style>
-            <p class="big-font">Top directors from your liked movies:</p>
+            <p class="director-font">Top directors from your liked movies:</p>
             """, unsafe_allow_html=True)
         fig2 = create_bar_graph(top_directors_high_rated, x="Count", y="Director", title="Common Directors from Movies you've Liked", color="rgb(239, 135, 51)",  hover_data=top_directors_high_rated["Movies"])
         st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
 
         st.markdown("""
             <style>
-            .big-font {
+            .director-font {
                 font-size:25px !important;
                 font-weight: 700 !important;
                 margin-bottom: 20px !important;
@@ -254,7 +243,7 @@ def director_stats(final_df):
                 z-index: 1000 !important;
             }
             </style>
-            <p class="big-font">Average rating per director:</p>
+            <p class="director-font">Average rating per director:</p>
             """, unsafe_allow_html=True)
         
         st.markdown("""
@@ -273,7 +262,7 @@ def director_stats(final_df):
 
         st.markdown("""
             <style>
-            .big-font {
+            .director-font {
                 font-size:25px !important;
                 font-weight: 700 !important;
                 margin-bottom: 20px !important;
@@ -281,7 +270,7 @@ def director_stats(final_df):
                 z-index: 1000 !important;
             }
             </style>
-            <p class="big-font">Average rating per director:</p>
+            <p class="director-font">Average rating per director:</p>
             """, unsafe_allow_html=True)
         
         st.markdown("""
@@ -300,7 +289,7 @@ def director_stats(final_df):
 
         st.markdown("""
             <style>
-            .big-font {
+            .director-font {
                 font-size:25px !important;
                 font-weight: 700 !important;
                 margin-bottom: -70px !important;
@@ -308,7 +297,7 @@ def director_stats(final_df):
                 z-index: 1000 !important;
             }
             </style>
-            <p class="big-font">Most watched directors and their genres:</p>
+            <p class="director-font">Most watched directors and their genres:</p>
             """, unsafe_allow_html=True)
         
         st.markdown("""
@@ -322,6 +311,5 @@ def director_stats(final_df):
             </style>
             <p class="small-font">(Based on your watched movies)</p>
             """, unsafe_allow_html=True)
-        
         fig5 = top_directors_top_genres(final_df)
         plot_top_directors_top_genres(fig5)

@@ -24,6 +24,7 @@ def create_bar_graph(data, x, y, title, color="skyblue", hover_data=None, ccs=No
             return "<br>".join(displayed_movies) + f"<br>and {more_count} more..."
 
     if hover_data is not None:
+        data = data.copy()
         data["hover_text"] = hover_data.apply(concise_hover_text)
     else:
         data["hover_text"] = ""
