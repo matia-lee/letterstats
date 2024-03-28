@@ -204,6 +204,8 @@ def genre_with_rating(final_df):
     return avg_rating_by_genre
 
 def create_avg_rating_by_genre_graph_horizontal(avg_rating_by_genre):
+    avg_rating_by_genre = avg_rating_by_genre.sort_values('mean_rating', ascending=True)
+
     fig = px.bar(
         avg_rating_by_genre, 
         y="genres", x="mean_rating", orientation="h",

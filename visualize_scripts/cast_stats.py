@@ -107,7 +107,7 @@ def visualize_network(G):
     custom_cmap = LinearSegmentedColormap.from_list("custom_expanded", colors, N=256)
     
     pos = nx.spring_layout(G, k=0.6, iterations=50)
-    adjusted_pos = iterative_adjust_positions(pos, min_distance=0.2, max_iterations=100)
+    adjusted_pos = iterative_adjust_positions(pos, min_distance=0.3, max_iterations=100)
 
     fig, ax = plt.subplots(figsize=(8, 8))
     fig.set_facecolor("#0F1116")
