@@ -17,6 +17,7 @@ from visualize_scripts.director_stats import director_stats
 from visualize_scripts.studios_stats import studio_stats
 from visualize_scripts.release_year_stats import release_year_stats
 from visualize_scripts.countries_stats import countries_stats
+from visualize_scripts.explore_movies import explore_movies
 
 st.set_page_config(page_title="LetterStats", page_icon="🍿")
 
@@ -100,6 +101,7 @@ def fetch_and_display_films(username):
             studio_stats(st.session_state['final_df'])
             release_year_stats(st.session_state['final_df'])
             countries_stats(st.session_state['final_df'])
+            explore_movies(st.session_state['final_df'])
         else:
             st.write("Can't seem to find any entries...")
     else:
