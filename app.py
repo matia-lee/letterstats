@@ -1,6 +1,5 @@
 import pandas as pd
 import streamlit as st
-import multiprocessing
 import asyncio
 import aiohttp
 from concurrent.futures import ThreadPoolExecutor
@@ -16,6 +15,8 @@ from visualize_scripts.genre_stats import genre_stats
 from visualize_scripts.cast_stats import cast_stats
 from visualize_scripts.director_stats import director_stats
 from visualize_scripts.studios_stats import studio_stats
+from visualize_scripts.release_year_stats import release_year_stats
+from visualize_scripts.countries_stats import countries_stats
 
 st.set_page_config(page_title="LetterStats", page_icon="🍿")
 
@@ -97,6 +98,8 @@ def fetch_and_display_films(username):
             cast_stats(st.session_state['final_df'])
             director_stats(st.session_state['final_df'])
             studio_stats(st.session_state['final_df'])
+            release_year_stats(st.session_state['final_df'])
+            countries_stats(st.session_state['final_df'])
         else:
             st.write("Can't seem to find any entries...")
     else:

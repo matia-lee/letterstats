@@ -306,7 +306,7 @@ def studio_stats(final_df):
         <p style="font-size: 15px; margin-top: -10px; z-index: 410; position: absolute;">(Shows film studios that collaborated in your top 10 rated movies. Bigger node size = more connections)</p>
         """, unsafe_allow_html=True)
         top_rated_df = final_df.sort_values(by='rating', ascending=False).head(10)
-        top_rated_df['studios'] = top_rated_df['studios'].apply(lambda x: ', '.join(x.split(', ')[:5]))
+        top_rated_df['studios'] = top_rated_df['studios'].apply(lambda x: ', '.join(x.split(', ')[:5]) if isinstance(x, str) else x)
         grab_connections = build_studio_collaboration_network(top_rated_df)
         visualize_studio_network(grab_connections)
 
