@@ -73,7 +73,7 @@ def lowest_director_with_rating(final_df):
     return avg_rating_by_director
 
 def create_avg_rating_by_director_graph_horizontal(avg_rating_by_director, title, color ,ccs=None):
-    avg_rating_by_director = avg_rating_by_director.sort_values('mean_rating', ascending=True)
+    # avg_rating_by_director = avg_rating_by_director.sort_values('mean_rating', ascending=True)
 
     fig = px.bar(
         avg_rating_by_director, 

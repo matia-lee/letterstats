@@ -11,7 +11,7 @@ def calculate_total_watched_time(final_df):
     max_index = final_df["title"].idxmax()
     st.markdown(f"<u>You've watched a total of <span style='color: rgb(239, 135, 51);'>{total_runtime_int}</span> minutes of cinema!</u>", unsafe_allow_html=True)
     st.write("Check out some stats below: ")
-    # st.write(f"That means, you've watched over {max_index} movies")
+    # st.write(f"That means, you"ve watched over {max_index} movies")
     return total_runtime_int, max_index
 
 def create_bar_graph(data, x, y, title, color="skyblue", hover_data=None, ccs=None):
@@ -90,13 +90,13 @@ def create_genre_over_time_graph(most_watched_genre_per_month):
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 def genre_stats_over_months(final_df):
-    final_df["watched_date"] = pd.to_datetime(final_df["watched_date"], format='%d %b %Y')
+    final_df["watched_date"] = pd.to_datetime(final_df["watched_date"], format="%d %b %Y")
 
     last_12_months = datetime.now() - timedelta(days=395)
     filtered_df = final_df[final_df["watched_date"] >= last_12_months]
 
     all_genres = filtered_df.assign(genres=filtered_df["genres"].str.split(", ")).explode("genres")
-    all_genres = all_genres[~all_genres['genres'].str.contains("show", case=False, na=False)]
+    all_genres = all_genres[~all_genres["genres"].str.contains("show", case=False, na=False)]
     all_genres["year_month"] = all_genres["watched_date"].dt.to_period("M")
 
     monthly_genre_counts = all_genres.groupby(["year_month", "genres"]).size().reset_index(name="counts")
@@ -113,21 +113,21 @@ def genre_stats_over_months(final_df):
     return most_watched_genre_per_month.tail(13)
 
 def calculate_diversity(final_df):
-    final_df["watched_date"] = pd.to_datetime(final_df["watched_date"], format='%d %b %Y')
+    final_df["watched_date"] = pd.to_datetime(final_df["watched_date"], format="%d %b %Y")
 
     last_12_months = datetime.now() - timedelta(days=395)
     filtered_df = final_df[final_df["watched_date"] >= last_12_months]
 
     all_genres = filtered_df.assign(genres=filtered_df["genres"].str.split(", ")).explode("genres")
-    all_genres = all_genres[~all_genres['genres'].str.contains("show", case=False, na=False)]
+    all_genres = all_genres[~all_genres["genres"].str.contains("show", case=False, na=False)]
     all_genres["year_month"] = all_genres["watched_date"].dt.to_period("M")
 
     monthly_genre_counts = all_genres.groupby(["year_month", "genres"]).size().reset_index(name="counts")
     monthly_totals = all_genres.groupby("year_month").size().reset_index(name="total_movies")
 
-    monthly_genre_counts['proportion'] = monthly_genre_counts.groupby('year_month')['counts'].transform(lambda x: x / float(x.sum()))
-    monthly_genre_counts['shannon_diversity'] = -(monthly_genre_counts['proportion'] * np.log(monthly_genre_counts['proportion']))
-    shannon_diversity_index = monthly_genre_counts.groupby('year_month')['shannon_diversity'].sum().reset_index()
+    monthly_genre_counts["proportion"] = monthly_genre_counts.groupby("year_month")["counts"].transform(lambda x: x / float(x.sum()))
+    monthly_genre_counts["shannon_diversity"] = -(monthly_genre_counts["proportion"] * np.log(monthly_genre_counts["proportion"]))
+    shannon_diversity_index = monthly_genre_counts.groupby("year_month")["shannon_diversity"].sum().reset_index()
 
     diversity_and_totals = pd.merge(shannon_diversity_index, monthly_totals, on="year_month")
     diversity_and_totals["year_month"] = diversity_and_totals["year_month"].astype(str)
@@ -143,18 +143,18 @@ def plot_diversity(diversity_and_totals_df):
         y=diversity_and_totals_df["total_movies"], 
         name="Total Movies",
         marker_color=bar_color,
-        yaxis='y',
-        hovertemplate='<b>%{y} movies</b> %{x}<extra></extra>',
+        yaxis="y",
+        hovertemplate="<b>%{y} movies</b> %{x}<extra></extra>",
     )
 
     line_chart = go.Scatter(
         x=diversity_and_totals_df["year_month"], 
         y=diversity_and_totals_df["shannon_diversity"], 
         name="Shannon Diversity Index", 
-        mode='lines+markers',
+        mode="lines+markers",
         marker_color=line_color,
-        yaxis='y2',
-        hoverinfo='none',
+        yaxis="y2",
+        hoverinfo="none",
     )
 
     fig = go.Figure(data=[bar_chart, line_chart])
@@ -193,18 +193,18 @@ def plot_diversity(diversity_and_totals_df):
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 def genre_with_rating(final_df):
-    final_df['genres'] = final_df['genres'].apply(lambda x: [genre.strip().lower() for genre in x.split(',')] if isinstance(x, str) else x)
-    df_exploded = final_df.explode('genres')
-    df_exploded = df_exploded[~df_exploded['genres'].str.contains("show", case=False, na=False)]
-    df_exploded['rating'] = pd.to_numeric(df_exploded['rating'], errors='coerce')
-    avg_rating_by_genre = df_exploded.groupby('genres')['rating'].mean().reset_index(name='mean_rating')
-    avg_rating_by_genre['mean_rating'] = avg_rating_by_genre['mean_rating'].round(1)
-    avg_rating_by_genre['genres'] = avg_rating_by_genre['genres'].str.capitalize()
+    final_df["genres"] = final_df["genres"].apply(lambda x: [genre.strip().lower() for genre in x.split(",")] if isinstance(x, str) else x)
+    df_exploded = final_df.explode("genres")
+    df_exploded = df_exploded[~df_exploded["genres"].str.contains("show", case=False, na=False)]
+    df_exploded["rating"] = pd.to_numeric(df_exploded["rating"], errors="coerce")
+    avg_rating_by_genre = df_exploded.groupby("genres")["rating"].mean().reset_index(name="mean_rating")
+    avg_rating_by_genre["mean_rating"] = avg_rating_by_genre["mean_rating"].round(1)
+    avg_rating_by_genre["genres"] = avg_rating_by_genre["genres"].str.capitalize()
     
     return avg_rating_by_genre
 
 def create_avg_rating_by_genre_graph_horizontal(avg_rating_by_genre):
-    avg_rating_by_genre = avg_rating_by_genre.sort_values('mean_rating', ascending=True)
+    # avg_rating_by_genre = avg_rating_by_genre.sort_values("mean_rating", ascending=True)
 
     fig = px.bar(
         avg_rating_by_genre, 
@@ -242,9 +242,9 @@ def genre_stats(final_df):
         genre_df["genres"] = genre_df["genres"].str.split(", ")
         genre_df = genre_df.explode("genres")
         genre_df = genre_df[~genre_df["genres"].str.contains("show", case=False, na=False)]
-        genre_movies = genre_df.groupby('genres')['title'].apply(list).reset_index(name='Movies')
+        genre_movies = genre_df.groupby("genres")["title"].apply(list).reset_index(name="Movies")
 
-        genre_count = genre_df['genres'].value_counts().reset_index()
+        genre_count = genre_df["genres"].value_counts().reset_index()
         genre_count.columns = ["Genres", "Count"]
         genre_count = genre_count.merge(genre_movies, left_on="Genres", right_on="genres", how="left").drop(columns=["genres"])
 

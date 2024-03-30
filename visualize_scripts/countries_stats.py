@@ -1,6 +1,7 @@
 import streamlit as st
 import plotly.express as px
 import pycountry
+import pandas as pd
 
 def get_iso_alpha_3(country_name):
     special_cases = {
@@ -18,7 +19,7 @@ def get_iso_alpha_3(country_name):
         country = pycountry.countries.lookup(country_name)
         return country.alpha_3
     except LookupError:
-        print(f"Country not found: {country_name}")
+        # print(f"Country not found: {country_name}")
         return None
 
 def prepare_world_map(final_df):
@@ -132,6 +133,55 @@ def plot_world_map(data, hover_data=None):
     
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
+def countries_with_rating(final_df):
+    final_df["countries"] = final_df["countries"].apply(lambda x: [countries.strip().lower() for countries in x.split(",")] if isinstance(x, str) else x)
+    df_exploded = final_df.explode("countries")
+    df_exploded = df_exploded[~df_exploded["countries"].str.contains("show", case=False, na=False)]
+
+    countries_counts = df_exploded["countries"].value_counts().reset_index(name="count").rename(columns={"index": "countries"})
+    top20_countriess = countries_counts.nlargest(20, "count")
+    df_exploded = df_exploded.merge(top20_countriess[["countries"]], on="countries")
+
+    df_exploded["rating"] = pd.to_numeric(df_exploded["rating"], errors="coerce")
+    avg_rating_by_countries = df_exploded.groupby("countries")["rating"].mean().reset_index(name="mean_rating")
+    avg_rating_by_countries["mean_rating"] = avg_rating_by_countries["mean_rating"].round(1)
+    avg_rating_by_countries["countries"] = avg_rating_by_countries["countries"].str.capitalize()
+    
+    return avg_rating_by_countries
+
+def create_avg_rating_by_countries_graph_horizontal(avg_rating_by_countries):
+    # avg_rating_by_countries = avg_rating_by_countries.sort_values("mean_rating", ascending=True)
+
+    fig = px.bar(
+        avg_rating_by_countries, 
+        y="countries", x="mean_rating", orientation="h",
+        text="mean_rating",  
+        color_discrete_sequence=["skyblue"] * len(avg_rating_by_countries),
+        title="Average Rating per countries"
+    )
+
+    fig.update_traces(hovertemplate="%{x:.2f} <b>Avg Rating</b>", textposition="outside")
+
+    fig.update_layout(
+        barmode="stack",
+        yaxis_visible=True, yaxis_showticklabels=True,
+        xaxis_title=None, yaxis_title=None, xaxis_visible=True,
+        plot_bgcolor="rgb(15,17,22)", paper_bgcolor="rgb(15,17,22)",
+        font=dict(color="#9b9b9b", size=12),
+        margin=dict(b=30),
+        height=600,
+        yaxis = dict(tickfont=dict(color="#9b9b9b")),
+    )
+
+    fig.update_traces(showlegend=False)
+    fig.update(layout_coloraxis_showscale=False)
+    fig.update_layout(
+        xaxis=dict(ticks="outside", tickcolor="#101010", ticklen=10, tickfont=dict(size=14, color="#9b9b9b")),
+        title={"text": "Average Rating per Countries", "y":0.9, "x":0.5, "xanchor": "center", "yanchor": "top", "font": dict(size=20, color="#9b9b9b")},
+    )
+
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+
 def countries_stats(final_df):
     with st.expander("Countries Stats"):
         countries_df = final_df.copy()
@@ -188,7 +238,7 @@ def countries_stats(final_df):
         countries_counted = liked_movies_df["countries"].value_counts().reset_index()
         countries_counted.columns = ["Countries", "Count"]
         countries_counted = countries_counted.merge(liked_countries_movies, left_on="Countries", right_on="countries", how="left").drop(columns=["countries"])
-        top_countries_high_rated = countries_counted.head(10).sort_values(by='Count', ascending=True)
+        top_countries_high_rated = countries_counted.head(10).sort_values(by="Count", ascending=True)
 
         st.markdown("""
             <style>
@@ -205,3 +255,32 @@ def countries_stats(final_df):
             """, unsafe_allow_html=True)
         fig3 = create_bar_graph(top_countries_high_rated, x="Count", y="Countries", title="Countries of the Movies You've Liked", color="rgb(239, 135, 51)", hover_data=top_countries_high_rated["Movies"])
         st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar": False})
+        
+        st.markdown("""
+            <style>
+            .fig4-font {
+                font-size:25px !important;
+                font-weight: 700 !important;
+                margin-top: 90px !imporant;
+                margin-bottom: -80px !important;
+                position: relative !important;
+                z-index: 1000 !important;
+            }
+            </style>
+            <p class="fig4-font">Average rating per country:</p>
+            """, unsafe_allow_html=True)
+        
+        st.markdown("""
+            <style>
+            .fig4-small-font {
+                font-size:15px !important;
+                margin-top: 40px !important;
+                z-index: 410 !important;
+                position: absolute !important;
+            }
+            </style>
+            <p class="fig4-small-font">(From your 20 most watched countries in order)</p>
+            """, unsafe_allow_html=True)
+        fig4df = final_df.copy()
+        fig4 = countries_with_rating(fig4df)
+        create_avg_rating_by_countries_graph_horizontal(fig4)

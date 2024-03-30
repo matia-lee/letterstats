@@ -65,7 +65,7 @@ def studio_with_rating(final_df):
     return avg_rating_by_studios
 
 def create_avg_rating_by_studios_graph_horizontal(avg_rating_by_studios, title, color, ccs=None):
-    avg_rating_by_studios = avg_rating_by_studios.sort_values('mean_rating', ascending=True)
+    # avg_rating_by_studios = avg_rating_by_studios.sort_values('mean_rating', ascending=True)
 
     fig = px.bar(
         avg_rating_by_studios, 
