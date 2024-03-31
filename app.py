@@ -101,7 +101,7 @@ def fetch_and_display_films(username):
             studio_stats(st.session_state['final_df'])
             release_year_stats(st.session_state['final_df'])
             countries_stats(st.session_state['final_df'])
-            explore_movies(st.session_state['final_df'])
+            # explore_movies(st.session_state['final_df'])
         else:
             st.write("Can't seem to find any entries...")
     else:
