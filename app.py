@@ -182,7 +182,7 @@ pd.set_option('future.no_silent_downcasting', True)
 
 def run_asyncio_tasks(username, diary_df, liked_df):
     async def async_wrapper():
-        semaphore = asyncio.Semaphore(10)
+        semaphore = asyncio.Semaphore(15)
         async with aiohttp.ClientSession() as session:
             diary_task = asyncio.create_task(grab_diary_movie_info_async(diary_df, session, semaphore))
             liked_task = asyncio.create_task(grab_liked_movie_info_async(username, liked_df, session, semaphore))
